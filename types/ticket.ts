@@ -1,9 +1,14 @@
 
 export type Ticket = {
-    _id?: string,
     name: string,
     cpf: string,
-    seat: number,
-    createdAt?: string | Date,
-    updatedAt?: string | Date
+    seat: string,
+    createdAt: string | Date,
+    updatedAt: string | Date
+}
+
+export type TicketDataToBeSent = {
+    name: string,
+    cpf: string,
+    seat: string
 }
