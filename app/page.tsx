@@ -1,5 +1,7 @@
 // import Image from "next/image";
 'use client'
+import { localStorageUtil } from "@/lib/localStorage_";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Home() {
@@ -144,6 +146,13 @@ export default function Home() {
     }
   }
 
+  const removeToken = () => {
+    const isTokenRemoved = localStorageUtil.removeItem('acessToken')
+
+    if(isTokenRemoved) alert('Token removido com sucesso')
+    if(!isTokenRemoved) alert('Erro ao remover token')
+  }
+
   return (
     <div className="flex flex-col justify-center items-center gap-2">
       <h2>Bem vindo a home</h2>
@@ -223,9 +232,30 @@ export default function Home() {
         className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
         onClick={lookForSeats}
       >
-        Ver númeors dos assentos reservados
+        Ver números dos assentos reservados
       </button>
 
+      <div className="flex gap-4">
+        <Link
+          href={'/adminPage/register'}
+          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        >
+          Ir para página de registro do admin
+        </Link>
+        <Link
+          href={'/adminPage/login'}
+          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        >
+          Ir para página de login do admin
+        </Link>
+      </div>
+
+      <button
+        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        onClick={removeToken}
+      >
+        Remover Token
+      </button>
     </div>
   );
 }
