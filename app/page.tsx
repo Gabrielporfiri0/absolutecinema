@@ -1,65 +1,82 @@
-import Image from "next/image";
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Home() {
+// Dados do Filme em Destaque
+const filmeDestaque = {
+  id: 1,
+  titulo: "Duna: Parte 2",
+  sinopse: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Uma jornada épica de guerra e destino.",
+  duracao: "2h 46m",
+  genero: "Ficção Científica",
+  posterUrl: "https://ingresso-a.akamaihd.net/prd/img/movie/duna-parte-2/3971d5d6-702d-40d8-b990-872d4ffe3e32.webp"
+};
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <div className="container mx-auto p-4">
+      
+      {/* 1. SEÇÃO DE BEM-VINDO (Mantida conforme solicitado) */}
+      <section className="text-center my-10">
+        <h1 className="text-4xl font-bold mb-4 text-white">Bem-vindo ao CineUEMS</h1>
+        <p className="text-xl text-gray-400">Os melhores filmes estão aqui.</p>
+      </section>
+
+      {/* 2. FILME EM DESTAQUE (Centralizado) */}
+      <section className="flex justify-center mb-16">
+        
+        {/* Container do Card (Flexbox para imagem ao lado do texto em telas grandes) */}
+        <div className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 overflow-hidden max-w-5xl w-full flex flex-col md:flex-row">
+          
+          {/* LADO ESQUERDO: Imagem */}
+          <div className="w-full md:w-1/3 relative min-h-[400px] md:min-h-full">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src={filmeDestaque.posterUrl}
+              alt={`Poster de ${filmeDestaque.titulo}`}
+              fill
+              className="object-cover"
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+
+          {/* LADO DIREITO: Informações */}
+          <div className="w-full md:w-2/3 p-8 flex flex-col justify-center text-left">
+            
+            <div className="mb-4">
+              <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wide">
+                Estreia da Semana
+              </span>
+            </div>
+
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              {filmeDestaque.titulo}
+            </h2>
+
+            <div className="flex items-center space-x-4 text-gray-400 text-sm mb-6">
+              <span className="flex items-center gap-1">
+                🕒 {filmeDestaque.duracao}
+              </span>
+              <span>|</span>
+              <span>{filmeDestaque.genero}</span>
+            </div>
+
+            <p className="text-gray-300 mb-8 leading-relaxed">
+              {filmeDestaque.sinopse}
+            </p>
+
+            {/* Botão de Reserva */}
+            <div className="mt-auto">
+              <Link 
+                href='/'
+                className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40"
+              >
+                Reservar Assento
+              </Link>
+            </div>
+
+          </div>
         </div>
-      </main>
+      </section>
+
     </div>
   );
 }
