@@ -19,11 +19,13 @@ export async function POST(request: NextRequest) {
 
         const collection = await getTicketsCollection()
 
-        // const sentCpfAlreadyExists = await collection.findOne({ cpf: data.cpf })
         const sentSeatAlreadyRegistered = await collection.findOne({ seat: Number(data.seat) })
 
-        // if (sentCpfAlreadyExists) return NextResponse.json({ error: 'O CPF já existe', status: 400 })
         if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado', status: 400 })
+
+        const numberOfTicketsWithThisCPF = await collection.countDocuments({ cpf: data.cpf })
+
+        if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets', status: 400 })
 
         const response = await collection.insertOne({
             name: data.name,
