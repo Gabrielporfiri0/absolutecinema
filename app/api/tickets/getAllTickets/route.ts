@@ -1,8 +1,13 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getTicketsCollection } from "../mongodb"
+import { validateAuth } from "@/lib/auth-utils"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const aValidTokenWasSent = validateAuth(request)
+
+        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+
         const collection = await getTicketsCollection()
         const tickets_ = await collection.find().toArray()
         return NextResponse.json({ message: 'Ingressos encontrados com sucesso', status: 200, tickets__: tickets_ })
