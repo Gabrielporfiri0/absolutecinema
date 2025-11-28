@@ -77,6 +77,27 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="flex gap-4">
+        <Link
+          href={'/adminPage/register'}
+          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        >
+          Ir para página de registro do admin
+        </Link>
+        <Link
+          href={'/adminPage/login'}
+          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        >
+          Ir para página de login do admin
+        </Link>
+      </div>
+
+      <button
+        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
+        onClick={removeToken}
+      >
+        Remover Token
+      </button>
     </div>
   );
 }

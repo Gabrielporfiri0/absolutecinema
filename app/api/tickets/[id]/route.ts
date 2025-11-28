@@ -2,18 +2,24 @@ import { NextResponse, NextRequest } from 'next/server'
 import { getTicketsCollection } from '../mongodb'
 import { ObjectId } from 'mongodb'
 import { Ticket } from '@/types/ticket'
+import { validateAuth } from '@/lib/auth-utils'
 
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        
         const { id } = await context.params
-
+        
         if (!id) return NextResponse.json({ error: 'ID não fornecido', status: 400 })
-
+            
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
-
+            
+        const aValidTokenWasSent = validateAuth(request)
+        
+        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+                
         const collection = await getTicketsCollection()
 
         const tickeT = await collection.findOne({ _id: ObjectId.createFromHexString(id) })
@@ -42,6 +48,10 @@ export async function DELETE(
 
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
 
+        const aValidTokenWasSent = validateAuth(request)
+
+        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+
         const collection = await getTicketsCollection()
 
         const ticket_ = await collection.findOne({ _id: ObjectId.createFromHexString(id) })
@@ -68,6 +78,10 @@ export async function PUT(
 
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
 
+        const aValidTokenWasSent = validateAuth(request)
+
+        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+
         let data: Ticket = {
             name: '',
             cpf: '',
@@ -90,11 +104,13 @@ export async function PUT(
 
         if (!ticketExists) return NextResponse.json({ error: 'Ingresso não encontrado', status: 404 })
 
-        // const sentCpfAlreadyExists = await collection.findOne({ cpf: data.cpf })
         const sentSeatAlreadyRegistered = await collection.findOne({ seat: Number(data.seat) })
 
-        // if (sentCpfAlreadyExists) return NextResponse.json({ error: 'O CPF já existe', status: 400 })
         if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado', status: 400 })
+
+        const numberOfTicketsWithThisCPF = await collection.countDocuments({ cpf: data.cpf })
+
+        if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets', status: 400 })
 
         await collection.updateOne(
             { _id: ObjectId.createFromHexString(id) },

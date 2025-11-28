@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
 
         try {
             data = await request.json()
-
             if (!data.name || !data.cpf || !Number(data.seat)) return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
         } catch (error) {
             return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
