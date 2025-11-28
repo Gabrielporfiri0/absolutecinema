@@ -1,239 +1,81 @@
-// import Image from "next/image";
-'use client'
-import { localStorageUtil } from "@/lib/localStorage_";
-import Link from "next/link";
-import { useState } from "react";
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Home() {
-  const [name_, setName_] = useState<string>('')
-  const [cpf_, setCPF_] = useState<string>('')
-  const [seat_, setSeat_] = useState<number>(0)
-  const [ID_update, setID_update] = useState<string>('')
-  const [ID_remove, setID_remove] = useState<string>('')
+// Dados do Filme em Destaque
+const filmeDestaque = {
+  id: 1,
+  titulo: "Duna: Parte 2",
+  sinopse: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Uma jornada épica de guerra e destino.",
+  duracao: "2h 46m",
+  genero: "Ficção Científica",
+  posterUrl: "https://ingresso-a.akamaihd.net/prd/img/movie/duna-parte-2/3971d5d6-702d-40d8-b990-872d4ffe3e32.webp"
+};
 
-  const handleRegisterNewTicket = async () => {
-    try {
-      const response = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: name_,
-          cpf: cpf_,
-          seat: seat_
-        })
-      })
-
-      const returnedResponse = await response.json()
-      console.log('CADASTRAR: ', returnedResponse)
-
-      if (returnedResponse.status === 201) {
-        setName_('')
-        setCPF_('')
-        setSeat_(0)
-      }
-
-    } catch (error) {
-      console.log('Erro ao registrar novo ingresso: ', error)
-      alert('Erro ao registrar novo ingresso !!!')
-    }
-  }
-
-  const handleDeleteTicket = async () => {
-    try {
-      const response = await fetch('/api/tickets', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: ID_remove })
-      })
-
-      const returnedResponse = await response.json()
-      console.log('DELETAR: ', returnedResponse)
-
-      if (returnedResponse.status === 200) {
-        alert('Ingresso deletado com sucesso !!')
-        setID_remove('')
-      }
-    } catch (error) {
-      console.log('Erro ao deletar ingresso: ', error)
-      alert('Erro ao deletar ingresso !!!')
-    }
-  }
-
-  const getUniqueTicket = async (id__: string) => {
-    try {
-      const response = await fetch(`/api/tickets/${id__}`)
-      const returnedResponse = await response.json()
-
-      if (returnedResponse.status === 200) {
-        console.log('Ingresso encontrado com sucesso !!')
-        console.log('BUSCAR POR ID: ' ,returnedResponse)
-        return returnedResponse.ticket_data
-      }
-
-      if(returnedResponse.status === 404 || returnedResponse.status === 400 || returnedResponse.status === 500){
-        console.log('BUSCAR POR ID' ,returnedResponse)
-        return null
-      }
-
-    } catch (error) {
-      console.log('Erro ao buscar dados do ingresso em questão')
-      alert('Erro ao buscar dados do ingresso')
-    }
-  }
-
-  const handleUpdateTicket = async () => {
-    try {
-      const ticket_data_ = await getUniqueTicket(ID_update)
-
-      if(!ticket_data_) return console.log('Erro ao atualizar ingresso.')
-
-      const response = await fetch('/api/tickets', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          _id: ID_update,
-          name: name_,
-          cpf: cpf_,
-          seat: seat_,
-          createdAt: ticket_data_.createdAt,
-          updatedAt: ticket_data_.updatedAt
-        })
-      })
-
-      const returnedResponse = await response.json()
-      console.log('ATUALIZAR: ' ,returnedResponse)
-
-      if (returnedResponse.status === 200) {
-        alert('Produto atualizado com sucesso')
-        setCPF_('')
-        setID_update('')
-        setName_('')
-        setSeat_(0)
-      }
-    } catch (error) {
-      console.log('Erro ao atualizar ingresso: ', error)
-      alert('Erro ao atualizar ingresso !!!')
-    }
-  }
-
-  const lookForTickets = async () => {
-    try {
-      const response = await fetch('/api/tickets')
-      const returnedResponse = await response.json()
-
-      if (returnedResponse.status === 200) console.log(returnedResponse.tickets__)
-    } catch (error) {
-      console.log('Erro ao buscar produtos: ', error)
-      alert('Erro ao buscar produtos !!!')
-    }
-  }
-
-  const lookForSeats = async () => {
-    try {
-      const response = await fetch('/api/tickets/getAllSeats')
-      const returnedResponse = await response.json()
-
-      if (returnedResponse.status === 200) console.log(returnedResponse.seats__)
-    } catch (error) {
-      console.log('Erro ao buscar assentos ', error)
-      alert('Erro ao buscar assentos !!!')
-    }
-  }
-
-  const removeToken = () => {
-    const isTokenRemoved = localStorageUtil.removeItem('acessToken')
-
-    if(isTokenRemoved) alert('Token removido com sucesso')
-    if(!isTokenRemoved) alert('Erro ao remover token')
-  }
-
+export default function HomePage() {
   return (
-    <div className="flex flex-col justify-center items-center gap-2">
-      <h2>Bem vindo a home</h2>
-      <input
-        type="text"
-        placeholder="Informe seu nome"
-        className="p-5 border border-black"
-        value={name_}
-        onChange={(e) => setName_(e.target.value)}
-      />
+    <div className="container mx-auto p-4">
+      
+      {/* 1. SEÇÃO DE BEM-VINDO (Mantida conforme solicitado) */}
+      <section className="text-center my-10">
+        <h1 className="text-4xl font-bold mb-4 text-white">Bem-vindo ao CineUEMS</h1>
+        <p className="text-xl text-gray-400">Os melhores filmes estão aqui.</p>
+      </section>
 
-      <input
-        type="text"
-        placeholder="Informe seu cpf"
-        className="p-5 border border-black"
-        value={cpf_}
-        onChange={(e) => setCPF_(e.target.value)}
-      />
+      {/* 2. FILME EM DESTAQUE (Centralizado) */}
+      <section className="flex justify-center mb-16">
+        
+        {/* Container do Card (Flexbox para imagem ao lado do texto em telas grandes) */}
+        <div className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 overflow-hidden max-w-5xl w-full flex flex-col md:flex-row">
+          
+          {/* LADO ESQUERDO: Imagem */}
+          <div className="w-full md:w-1/3 relative min-h-[400px] md:min-h-full">
+            <Image
+              src={filmeDestaque.posterUrl}
+              alt={`Poster de ${filmeDestaque.titulo}`}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
 
-      <input
-        type="number"
-        placeholder="Informe o número do assento"
-        className="p-5 border border-black"
-        value={seat_}
-        onChange={(e) => setSeat_(Number(e.target.value))}
-      />
+          {/* LADO DIREITO: Informações */}
+          <div className="w-full md:w-2/3 p-8 flex flex-col justify-center text-left">
+            
+            <div className="mb-4">
+              <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wide">
+                Estreia da Semana
+              </span>
+            </div>
 
-      <button
-        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-        onClick={handleRegisterNewTicket}
-      >
-        Cadastrar
-      </button>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              {filmeDestaque.titulo}
+            </h2>
 
-      <div className="flex gap-4">
-        <input
-          type="text"
-          placeholder="Informe seu id"
-          className="p-5 border border-black"
-          value={ID_remove}
-          onChange={(e) => setID_remove(e.target.value)}
-        />
+            <div className="flex items-center space-x-4 text-gray-400 text-sm mb-6">
+              <span className="flex items-center gap-1">
+                🕒 {filmeDestaque.duracao}
+              </span>
+              <span>|</span>
+              <span>{filmeDestaque.genero}</span>
+            </div>
 
-        <button
-          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-          onClick={handleDeleteTicket}
-        >
-          Remover
-        </button>
-      </div>
+            <p className="text-gray-300 mb-8 leading-relaxed">
+              {filmeDestaque.sinopse}
+            </p>
 
-      <div className="flex gap-4">
-        <input
-          type="text"
-          placeholder="Informe seu id"
-          className="p-5 border border-black"
-          value={ID_update}
-          onChange={(e) => setID_update(e.target.value)}
-        />
+            {/* Botão de Reserva */}
+            <div className="mt-auto">
+              <Link 
+                href={`/filme/${filmeDestaque.id}`}
+                className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40"
+              >
+                Reservar Assento
+              </Link>
+            </div>
 
-        <button
-          className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-          onClick={handleUpdateTicket}
-        >
-          Atualizar
-        </button>
-      </div>
-
-      <button
-        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-        onClick={lookForTickets}
-      >
-        Ver ingressos
-      </button>
-
-      <button
-        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-        onClick={lookForSeats}
-      >
-        Ver números dos assentos reservados
-      </button>
+          </div>
+        </div>
+      </section>
 
       <div className="flex gap-4">
         <Link
