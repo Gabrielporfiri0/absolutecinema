@@ -18,9 +18,9 @@ export async function POST(request: NextRequest){
             return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
         }
         
-        // const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = validateAuth(request)
 
-        // if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })  
+        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })  
 
         const adminCollection = await getAdminsCollection()
 
