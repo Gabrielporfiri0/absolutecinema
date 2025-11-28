@@ -91,13 +91,6 @@ export default function HomePage() {
           Ir para página de login do admin
         </Link>
       </div>
-
-      <button
-        className="p-5 bg-blue-500 hover:cursor-pointer hover:bg-blue-700 font-bold rounded-2xl"
-        onClick={removeToken}
-      >
-        Remover Token
-      </button>
     </div>
   );
 }
