@@ -1,6 +1,6 @@
 'use client'
 
-import { localStorageUtil } from "@/lib/localStorage_"
+// import { localStorageUtil } from "@/lib/localStorage_"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -10,20 +10,16 @@ export default function Page() {
     const router = useRouter()
 
     const handleRegisterNewAdmin = async () => {
-        const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+        // const acessToken_ = localStorageUtil.getItem<string>('acessToken')
 
-        if(!acessToken_){
-            alert('Token não encontrado !!!')
-            return
-        } 
+        // if(!acessToken_){
+        //     alert('Token não encontrado !!!')
+        //     return
+        // } 
 
         try {
             const response = await fetch('/api/admin/register', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${acessToken_}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({
                     name: userName,
                     password: userPassword
