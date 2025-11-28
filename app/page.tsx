@@ -66,7 +66,7 @@ export default function HomePage() {
             {/* Botão de Reserva */}
             <div className="mt-auto">
               <Link 
-                href='/'
+                href={`/filme/${filmeDestaque.id}`}
                 className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40"
               >
                 Reservar Assento
