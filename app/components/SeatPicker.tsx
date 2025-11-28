@@ -85,9 +85,18 @@ export default function SeatPicker() {
     if (status === '1') return;
 
     const seatId = `${fileira}-${assento}`;
+    
+    // Se o assento já está selecionado, removemos ele (sempre permitido)
     if (selecionadas.includes(seatId)) {
       setSelecionadas(selecionadas.filter(id => id !== seatId));
     } else {
+      // Tenta selecionar um NOVO assento
+      // VERIFICAÇÃO DE LIMITE AQUI:
+      if (selecionadas.length >= 4) {
+        alert("Você atingiu o limite máximo de 4 assentos por reserva.");
+        return;
+      }
+      
       setSelecionadas([...selecionadas, seatId]);
     }
   };
@@ -107,7 +116,7 @@ export default function SeatPicker() {
       return;
     }
 
-    // 3. Validação de Unicidade (O que você pediu)
+    // 3. Validação de Unicidade
     // Verifica se o CPF já existe na lista de reservas
     const cpfJaExiste = reservas.some((reserva) => reserva.cpf === cpf);
     
