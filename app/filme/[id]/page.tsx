@@ -1,4 +1,4 @@
-import SeatPicker from "../../components/SeatPicker";
+import SeatPicker from "../../../components/SeatPicker";
 
 export default function FilmePage({ params }: { params: { id: string } }) {
   return (
