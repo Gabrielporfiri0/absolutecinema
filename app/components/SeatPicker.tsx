@@ -1,30 +1,25 @@
 'use client'; 
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
-// --- FUNÇÕES UTILITÁRIAS (Helpers) ---
+// --- FUNÇÕES UTILITÁRIAS ---
 
-// 1. Formata o CPF visualmente (000.000.000-00)
 const mascaraCPF = (valor: string) => {
   return valor
-    .replace(/\D/g, '') // Remove tudo o que não é dígito
-    .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o 3º digito
-    .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o 6º digito
-    .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Coloca traço após o 9º digito
-    .replace(/(-\d{2})\d+?$/, '$1'); // Impede digitar mais que 11 dígitos
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
 };
 
-// 2. Valida matematicamente se o CPF é real
 const validarCPF = (cpf: string) => {
-  const strCPF = cpf.replace(/[^\d]+/g, ''); // Remove pontos e traços
+  const strCPF = cpf.replace(/[^\d]+/g, '');
   if (strCPF === '') return false;
-  
-  // Elimina CPFs invalidos conhecidos (ex: 111.111.111-11)
   if (strCPF.length !== 11 || /^(\d)\1{10}$/.test(strCPF)) return false;
 
-  let soma;
+  let soma = 0;
   let resto;
-  soma = 0;
   
   for (let i = 1; i <= 9; i++) 
     soma = soma + parseInt(strCPF.substring(i - 1, i)) * (11 - i);
@@ -44,16 +39,18 @@ const validarCPF = (cpf: string) => {
   return true;
 };
 
-// --- COMPONENTE PRINCIPAL ---
+// --- CONFIGURAÇÃO DO LAYOUT ---
 
 type Reserva = {
   id: number;
   nome: string;
   cpf: string;
-  assentos: string[];
+  assentos: string[]; 
+  numerosAssentos: number[]; 
   data: string;
 };
 
+// 'l' = livre, 'u' = ocupada, '1' = corredor (invisível)
 const layoutInicial = [
   ['l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l'],
   ['l','l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l', 'l'],
@@ -67,12 +64,31 @@ const layoutInicial = [
 
 export default function SeatPicker() {
   const [fileiras, setFileiras] = useState(layoutInicial);
-  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const [selecionadas, setSelecionadas] = useState<string[]>([]); 
   const [nome, setNome] = useState('');
   const [cpf, setCpf] = useState('');
   const [reservas, setReservas] = useState<Reserva[]>([]);
 
-  // Atualiza o CPF aplicando a máscara
+  // --- LÓGICA DE NUMERAÇÃO DE CADEIRAS ---
+  // Memoizamos isso para não recalcular toda hora.
+  const mapaDeNumeros = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    let contador = 1;
+
+    // Iteramos do COMEÇO (topo/perto da tela) para o final
+    for (let i = 0; i < layoutInicial.length; i++) {
+      // Iteramos da esquerda para a direita na linha
+      for (let j = 0; j < layoutInicial[i].length; j++) {
+        // Se não for corredor ('1'), ganha um número
+        if (layoutInicial[i][j] !== '1') {
+          mapa[`${i}-${j}`] = contador;
+          contador++;
+        }
+      }
+    }
+    return mapa;
+  }, []);
+
   const handleChangeCpf = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(mascaraCPF(e.target.value));
   };
@@ -86,17 +102,13 @@ export default function SeatPicker() {
 
     const seatId = `${fileira}-${assento}`;
     
-    // Se o assento já está selecionado, removemos ele (sempre permitido)
     if (selecionadas.includes(seatId)) {
       setSelecionadas(selecionadas.filter(id => id !== seatId));
     } else {
-      // Tenta selecionar um NOVO assento
-      // VERIFICAÇÃO DE LIMITE AQUI:
       if (selecionadas.length >= 4) {
         alert("Você atingiu o limite máximo de 4 assentos por reserva.");
         return;
       }
-      
       setSelecionadas([...selecionadas, seatId]);
     }
   };
@@ -104,40 +116,36 @@ export default function SeatPicker() {
   const handleConfirmarReserva = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Validação de preenchimento básico
     if (!nome || !cpf) {
       alert("Por favor, preencha nome e CPF.");
       return;
     }
 
-    // 2. Validação Matemática do CPF
     if (!validarCPF(cpf)) {
-      alert("CPF Inválido! Por favor verifique o número.");
+      alert("CPF Inválido!");
       return;
     }
 
-    // 3. Validação de Unicidade
-    // Verifica se o CPF já existe na lista de reservas
     const cpfJaExiste = reservas.some((reserva) => reserva.cpf === cpf);
-    
     if (cpfJaExiste) {
       alert("ERRO: Este CPF já possui uma reserva ativa!");
-      return; // Para a execução aqui
+      return;
     }
 
-    // --- Se passou por tudo, salva a reserva ---
+    // Pega os números reais das cadeiras para salvar
+    const numerosDasCadeiras = selecionadas.map(id => mapaDeNumeros[id]).sort((a, b) => a - b);
 
     const novaReserva: Reserva = {
       id: Date.now(),
       nome,
       cpf,
       assentos: selecionadas,
+      numerosAssentos: numerosDasCadeiras,
       data: new Date().toLocaleString()
     };
 
     setReservas([...reservas, novaReserva]);
 
-    // Atualiza visualmente as cadeiras para 'Ocupadas'
     const novasFileiras = [...fileiras];
     selecionadas.forEach(seat => {
       const [f, a] = seat.split('-').map(Number);
@@ -146,64 +154,90 @@ export default function SeatPicker() {
     });
     setFileiras(novasFileiras);
 
-    // Limpa
     setSelecionadas([]);
     setNome('');
     setCpf('');
-    alert("Reserva realizada com sucesso!");
+    alert(`Reserva confirmada! Assentos: ${numerosDasCadeiras.join(', ')}`);
   };
 
   const getSeatClass = (seatId: string, status: string) => {
-    if (status === 'u') return 'bg-red-700 cursor-not-allowed'; 
-    if (status === '1') return 'invisible';
-    if (selecionadas.includes(seatId)) return 'bg-green-500';
-    return 'bg-gray-600 hover:bg-gray-500';
+    if (status === 'u') return 'bg-gray-700 cursor-not-allowed border border-gray-600'; // Ocupada
+    if (status === '1') return 'invisible'; // Corredor
+    
+    if (selecionadas.includes(seatId)) {
+      // SELECIONADA
+      return 'bg-yellow-400 text-black font-bold border border-yellow-500 shadow-[0_0_10px_rgba(250,204,21,0.5)]'; 
+    }
+    
+    // LIVRE
+    return 'bg-slate-400 hover:bg-slate-300 text-transparent hover:text-gray-600 transition-all duration-200';
   };
 
   return (
-<div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+    <div className="flex flex-col items-center w-full max-w-4xl mx-auto py-8">
       
-      {/* --- INÍCIO DA PARTE ALTERADA --- */}
-      
-      {/* 1. Wrapper Externo: Cria a barra de rolagem (scroll) se precisar */}
-      <div className="w-full overflow-x-auto pb-8 mb-4 no-scrollbar">
-        
-        {/* 2. Wrapper Interno: min-w-max força os assentos a terem o tamanho real, 
-               impedindo que fiquem espremidos no celular */}
-        <div className="min-w-max flex flex-col gap-2 items-center mx-auto px-4">
-          
-          {/* Renderização das Fileiras */}
-          {fileiras.map((fileira, fIndex) => (
-            <div key={fIndex} className="flex gap-2 justify-center">
-              {fileira.map((status, aIndex) => {
-                const seatId = `${fIndex}-${aIndex}`;
-                return (
-                  <div
-                    key={aIndex}
-                    className={`w-8 h-8 rounded-md cursor-pointer flex items-center justify-center text-xs text-transparent transition-transform hover:scale-110 ${getSeatClass(seatId, status)}`}
-                    onClick={() => handleSeatClick(fIndex, aIndex, status)}
-                  />
-                );
-              })}
-            </div>
-          ))}
+     
 
+      {/* CADEIRAS */}
+      <div className="flex flex-col gap-2 mb-12 relative">
+        {fileiras.map((fileira, fIndex) => (
+          <div key={fIndex} className="flex gap-2 justify-center">
+            {fileira.map((status, aIndex) => {
+              const seatId = `${fIndex}-${aIndex}`;
+              const numeroAssento = mapaDeNumeros[seatId];
+              const isSelected = selecionadas.includes(seatId);
+
+              return (
+                <div
+                  key={aIndex}
+                  className={`
+                    w-8 h-8 md:w-10 md:h-10 rounded-full md:rounded-lg 
+                    flex items-center justify-center text-xs md:text-sm select-none
+                    ${getSeatClass(seatId, status)}
+                  `}
+                  onClick={() => handleSeatClick(fIndex, aIndex, status)}
+                  title={`Assento ${numeroAssento}`} 
+                >
+                  {(isSelected) && numeroAssento}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* LEGENDA */}
+      <div className="flex gap-6 mb-8 text-sm bg-gray-900 px-6 py-3 rounded-full border border-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-slate-400"></div> 
+          <span className="text-gray-300">Livre</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500"></div> 
+          <span className="text-white font-bold">Selecionada</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-gray-700 border border-gray-600"></div> 
+          <span className="text-gray-400">Ocupada</span>
         </div>
       </div>
 
-      <div className="flex gap-4 mb-8 text-sm">
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-gray-600"></div> Livre</div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-green-500"></div> Selecionada</div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-red-700"></div> Ocupada</div>
-      </div>
-
-      {/* Formulário */}
+      {/* FORMULÁRIO */}
       {selecionadas.length > 0 && (
-        <form onSubmit={handleConfirmarReserva} className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mb-8">
-          <h3 className="text-xl font-bold mb-4 text-white">Dados da Reserva</h3>
+        <form onSubmit={handleConfirmarReserva} className="bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 w-full max-w-md mb-8 animation-fade-in">
+          <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+            <span className="text-yellow-400">🎟️</span> Confirmar Reserva
+          </h3>
           
-          <div className="mb-4">
-            <p className="text-sm text-gray-400 mb-2">Assentos: <span className="text-white font-mono">{selecionadas.join(', ')}</span></p>
+          <div className="mb-4 bg-gray-900 p-3 rounded border border-gray-700">
+            <p className="text-sm text-gray-400 mb-1">Assentos Escolhidos:</p>
+            <div className="flex flex-wrap gap-2">
+              {selecionadas.map(id => (
+                <span key={id} className="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
+                  #{mapaDeNumeros[id]}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -213,8 +247,8 @@ export default function SeatPicker() {
                 type="text" 
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
-                placeholder="Fulano Ciclano Bertlano"
+                className="w-full p-2 rounded bg-black text-white border border-gray-600 focus:border-yellow-400 outline-none transition-colors"
+                placeholder="Ex: João da Silva"
                 required
               />
             </div>
@@ -223,50 +257,47 @@ export default function SeatPicker() {
               <input 
                 type="text" 
                 value={cpf}
-                // Usamos o handle específico para aplicar a máscara
                 onChange={handleChangeCpf}
-                maxLength={14} // 11 digitos + 3 simbolos
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                maxLength={14}
+                className="w-full p-2 rounded bg-black text-white border border-gray-600 focus:border-yellow-400 outline-none transition-colors"
                 placeholder="000.000.000-00"
                 required
               />
             </div>
             
-            <button type="submit" className="w-full bg-red-600 py-3 rounded font-bold text-white hover:bg-red-700 transition">
-              Confirmar e Salvar
+            <button type="submit" className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded transition-all transform active:scale-95 shadow-lg">
+              Confirmar Reserva
             </button>
           </div>
         </form>
       )}
 
-      {/* Tabela */}
-      <div className="w-full mt-8">
-        <h2 className="text-2xl font-bold mb-4 text-left border-l-4 border-red-600 pl-3">
-          Banco de Dados (Simulação)
+      {/* TABELA ADMIN (Simulação) */}
+      <div className="w-full mt-8 border-t border-gray-800 pt-8">
+        <h2 className="text-xl font-bold mb-4 text-gray-400">
+          Simulação de Banco de Dados
         </h2>
         
         {reservas.length === 0 ? (
-          <p className="text-gray-500 italic">Nenhuma reserva feita ainda.</p>
+          <p className="text-gray-600 italic text-sm">Nenhuma reserva feita ainda.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse bg-gray-900 rounded-lg overflow-hidden">
-              <thead className="bg-gray-800 text-gray-300">
+          <div className="overflow-x-auto rounded-lg border border-gray-700">
+            <table className="w-full text-left bg-gray-900">
+              <thead className="bg-black text-gray-400 text-xs uppercase">
                 <tr>
-                  <th className="p-3">ID</th>
                   <th className="p-3">Nome</th>
                   <th className="p-3">CPF</th>
-                  <th className="p-3">Assentos</th>
-                  <th className="p-3">Data/Hora</th>
+                  <th className="p-3">Assentos (Nº)</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-400">
+              <tbody className="text-gray-300 text-sm">
                 {reservas.map((reserva) => (
-                  <tr key={reserva.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                    <td className="p-3 font-mono text-xs">{reserva.id}</td>
+                  <tr key={reserva.id} className="border-t border-gray-800 hover:bg-gray-800">
                     <td className="p-3">{reserva.nome}</td>
-                    <td className="p-3">{reserva.cpf}</td>
-                    <td className="p-3">{reserva.assentos.join(', ')}</td>
-                    <td className="p-3 text-sm">{reserva.data}</td>
+                    <td className="p-3 font-mono">{reserva.cpf}</td>
+                    <td className="p-3 text-yellow-400 font-bold">
+                      {reserva.numerosAssentos.join(', ')}
+                    </td>
                   </tr>
                 ))}
               </tbody>
