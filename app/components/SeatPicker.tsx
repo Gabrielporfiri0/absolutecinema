@@ -161,24 +161,34 @@ export default function SeatPicker() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+<div className="flex flex-col items-center w-full max-w-4xl mx-auto">
       
-      {/* Cadeiras */}
-      <div className="grid gap-2 mb-8">
-        {fileiras.map((fileira, fIndex) => (
-          <div key={fIndex} className="flex gap-2 justify-center">
-            {fileira.map((status, aIndex) => {
-              const seatId = `${fIndex}-${aIndex}`;
-              return (
-                <div
-                  key={aIndex}
-                  className={`w-8 h-8 rounded-md cursor-pointer flex items-center justify-center text-xs text-transparent ${getSeatClass(seatId, status)}`}
-                  onClick={() => handleSeatClick(fIndex, aIndex, status)}
-                />
-              );
-            })}
-          </div>
-        ))}
+      {/* --- INÍCIO DA PARTE ALTERADA --- */}
+      
+      {/* 1. Wrapper Externo: Cria a barra de rolagem (scroll) se precisar */}
+      <div className="w-full overflow-x-auto pb-8 mb-4 no-scrollbar">
+        
+        {/* 2. Wrapper Interno: min-w-max força os assentos a terem o tamanho real, 
+               impedindo que fiquem espremidos no celular */}
+        <div className="min-w-max flex flex-col gap-2 items-center mx-auto px-4">
+          
+          {/* Renderização das Fileiras */}
+          {fileiras.map((fileira, fIndex) => (
+            <div key={fIndex} className="flex gap-2 justify-center">
+              {fileira.map((status, aIndex) => {
+                const seatId = `${fIndex}-${aIndex}`;
+                return (
+                  <div
+                    key={aIndex}
+                    className={`w-8 h-8 rounded-md cursor-pointer flex items-center justify-center text-xs text-transparent transition-transform hover:scale-110 ${getSeatClass(seatId, status)}`}
+                    onClick={() => handleSeatClick(fIndex, aIndex, status)}
+                  />
+                );
+              })}
+            </div>
+          ))}
+
+        </div>
       </div>
 
       <div className="flex gap-4 mb-8 text-sm">
