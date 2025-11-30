@@ -1,6 +1,8 @@
 'use client'; 
 
-import { useState } from 'react';
+import { TicketDataToBeSent } from '@/types/ticket';
+import { useState, useEffect } from 'react';
+// import { toast } from 'sonner';
 
 // --- FUNÇÕES UTILITÁRIAS (Helpers) ---
 
@@ -44,16 +46,6 @@ const validarCPF = (cpf: string) => {
   return true;
 };
 
-// --- COMPONENTE PRINCIPAL ---
-
-type Reserva = {
-  id: number;
-  nome: string;
-  cpf: string;
-  assentos: string[];
-  data: string;
-};
-
 const layoutInicial = [
   ['l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l'],
   ['l','l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l', 'l'],
@@ -65,43 +57,87 @@ const layoutInicial = [
   ['1', '1', '1', '1', '1','l','l', 'l', 'l', 'l', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
 ];
 
+// Função para gerar o mapa de assentos com números
+const gerarMapaAssentos = () => {
+  const mapa: { numero: number; fileira: number; assento: number; status: string }[] = [];
+  let contador = 1;
+
+  layoutInicial.forEach((fileira, fIndex) => {
+    fileira.forEach((status, aIndex) => {
+      if (status === 'l') {
+        mapa.push({
+          numero: contador,
+          fileira: fIndex,
+          assento: aIndex,
+          status: 'l'
+        });
+        contador++;
+      }
+    });
+  });
+
+  return mapa;
+};
+
+const mapaAssentos = gerarMapaAssentos();
+
 export default function SeatPicker() {
-  const [fileiras, setFileiras] = useState(layoutInicial);
-  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const [selecionadas, setSelecionadas] = useState<number[]>([]);
   const [nome, setNome] = useState('');
   const [cpf, setCpf] = useState('');
-  const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [seatsReserved, setSeatsReserved] = useState<number[]>([]);
+
+  // Buscar assentos reservados quando o componente carregar
+  useEffect(() => {
+    getSeatsThatAreReserved();
+  }, []);
+
+  const getSeatsThatAreReserved = async () => {
+    try {
+      const response = await fetch('/api/tickets/getAllSeats');
+      const returnedData = await response.json();
+
+      if (returnedData.status === 200) {
+        setSeatsReserved(returnedData.seats__);
+      }
+
+      if (returnedData.status === 500) {
+        console.error('Erro ao buscar dados dos assentos');
+      }
+    } catch (error) {
+      console.log('Erro ao buscar dados de todos os assentos registrados: ', error);
+    }
+  };
 
   // Atualiza o CPF aplicando a máscara
   const handleChangeCpf = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(mascaraCPF(e.target.value));
   };
 
-  const handleSeatClick = (fileira: number, assento: number, status: string) => {
-    if (status === 'u') {
-      alert("Este assento já está ocupado!");
+  const handleSeatClick = (numeroAssento: number, fileira: number, assento: number) => {
+    // Verifica se o assento já está reservado
+    if (seatsReserved.includes(numeroAssento)) {
+      alert("Este assento já está reservado!");
       return;
     }
-    if (status === '1') return;
 
-    const seatId = `${fileira}-${assento}`;
-    
     // Se o assento já está selecionado, removemos ele (sempre permitido)
-    if (selecionadas.includes(seatId)) {
-      setSelecionadas(selecionadas.filter(id => id !== seatId));
+    if (selecionadas.includes(numeroAssento)) {
+      setSelecionadas(selecionadas.filter(num => num !== numeroAssento));
     } else {
       // Tenta selecionar um NOVO assento
       // VERIFICAÇÃO DE LIMITE AQUI:
       if (selecionadas.length >= 4) {
         alert("Você atingiu o limite máximo de 4 assentos por reserva.");
+        // toast('Você atingiu o limite máximo de 4 assentos por reserva')
         return;
       }
       
-      setSelecionadas([...selecionadas, seatId]);
+      setSelecionadas([...selecionadas, numeroAssento]);
     }
   };
 
-  const handleConfirmarReserva = (e: React.FormEvent) => {
+  const handleConfirmarReserva = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 1. Validação de preenchimento básico
@@ -116,73 +152,94 @@ export default function SeatPicker() {
       return;
     }
 
-    // 3. Validação de Unicidade
-    // Verifica se o CPF já existe na lista de reservas
-    const cpfJaExiste = reservas.some((reserva) => reserva.cpf === cpf);
-    
-    if (cpfJaExiste) {
-      alert("ERRO: Este CPF já possui uma reserva ativa!");
-      return; // Para a execução aqui
+    try {
+      
+      for(let i = 0; i < selecionadas.length; i++){
+        const novaReserva: TicketDataToBeSent = {
+          name: nome,
+          cpf: cpf,
+          seat: selecionadas[i].toString() // Converte para string se a API espera string
+        };
+
+        // Enviar reserva para a API
+        const response = await fetch('/api/tickets/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(novaReserva),
+        });
+        
+        const returnedData = await response.json()
+
+        if(returnedData.status === 400){
+          alert(`Erro ao reservar cadeira ${selecionadas[i]}: ${returnedData.error}`)
+          continue
+        }
+
+        if(returnedData.status === 500){
+          alert(`Erro ao reservar cadeira ${selecionadas[i]}: ${returnedData.error}`)
+          continue
+        }
+
+        if (returnedData.status === 201) alert(`Reserva da cadeira ${selecionadas[i]} feita com sucesso !!!`);
+      }
+
+      // Atualizar lista de assentos reservados
+      await getSeatsThatAreReserved();
+      
+      // Limpa
+      setSelecionadas([]);
+      setNome('');
+      setCpf('');
+    } catch (error) {
+      console.error('Erro ao enviar reserva:', error);
+      alert("Erro ao realizar reserva. Tente novamente.");
     }
-
-    // --- Se passou por tudo, salva a reserva ---
-
-    const novaReserva: Reserva = {
-      id: Date.now(),
-      nome,
-      cpf,
-      assentos: selecionadas,
-      data: new Date().toLocaleString()
-    };
-
-    setReservas([...reservas, novaReserva]);
-
-    // Atualiza visualmente as cadeiras para 'Ocupadas'
-    const novasFileiras = [...fileiras];
-    selecionadas.forEach(seat => {
-      const [f, a] = seat.split('-').map(Number);
-      novasFileiras[f] = [...novasFileiras[f]];
-      novasFileiras[f][a] = 'u';
-    });
-    setFileiras(novasFileiras);
-
-    // Limpa
-    setSelecionadas([]);
-    setNome('');
-    setCpf('');
-    alert("Reserva realizada com sucesso!");
   };
 
-  const getSeatClass = (seatId: string, status: string) => {
-    if (status === 'u') return 'bg-red-700 cursor-not-allowed'; 
+  const getSeatClass = (numeroAssento: number, status: string) => {
+    if (seatsReserved.includes(numeroAssento)) return 'bg-red-700 cursor-not-allowed'; 
     if (status === '1') return 'invisible';
-    if (selecionadas.includes(seatId)) return 'bg-green-500';
+    if (selecionadas.includes(numeroAssento)) return 'bg-green-500';
     return 'bg-gray-600 hover:bg-gray-500';
   };
 
+  // Função para obter o número do assento baseado na fileira e posição
+  const getNumeroAssento = (fileira: number, assento: number) => {
+    const assentoInfo = mapaAssentos.find(a => a.fileira === fileira && a.assento === assento);
+    return assentoInfo ? assentoInfo.numero : 0;
+  };
+
   return (
-<div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+    <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
       
-      {/* --- INÍCIO DA PARTE ALTERADA --- */}
-      
-      {/* 1. Wrapper Externo: Cria a barra de rolagem (scroll) se precisar */}
+      {/* Wrapper Externo: Cria a barra de rolagem (scroll) se precisar */}
       <div className="w-full overflow-x-auto pb-8 mb-4 no-scrollbar">
         
-        {/* 2. Wrapper Interno: min-w-max força os assentos a terem o tamanho real, 
-               impedindo que fiquem espremidos no celular */}
+        {/* Wrapper Interno: min-w-max força os assentos a terem o tamanho real */}
         <div className="min-w-max flex flex-col gap-2 items-center mx-auto px-4">
           
           {/* Renderização das Fileiras */}
-          {fileiras.map((fileira, fIndex) => (
+          {layoutInicial.map((fileira, fIndex) => (
             <div key={fIndex} className="flex gap-2 justify-center">
               {fileira.map((status, aIndex) => {
-                const seatId = `${fIndex}-${aIndex}`;
+                const numeroAssento = getNumeroAssento(fIndex, aIndex);
+                
                 return (
                   <div
                     key={aIndex}
-                    className={`w-8 h-8 rounded-md cursor-pointer flex items-center justify-center text-xs text-transparent transition-transform hover:scale-110 ${getSeatClass(seatId, status)}`}
-                    onClick={() => handleSeatClick(fIndex, aIndex, status)}
-                  />
+                    className={`w-8 h-8 rounded-md cursor-pointer flex items-center justify-center text-xs transition-transform hover:scale-110 ${getSeatClass(numeroAssento, status)} ${
+                      numeroAssento > 0 && !seatsReserved.includes(numeroAssento) && status !== '1' ? 'text-white' : 'text-transparent'
+                    }`}
+                    onClick={() => {
+                      if (numeroAssento > 0 && status !== '1') {
+                        handleSeatClick(numeroAssento, fIndex, aIndex);
+                      }
+                    }}
+                  >
+                    {numeroAssento > 0 && status !== '1' ? numeroAssento : ''}
+                  </div>
                 );
               })}
             </div>
@@ -203,7 +260,11 @@ export default function SeatPicker() {
           <h3 className="text-xl font-bold mb-4 text-white">Dados da Reserva</h3>
           
           <div className="mb-4">
-            <p className="text-sm text-gray-400 mb-2">Assentos: <span className="text-white font-mono">{selecionadas.join(', ')}</span></p>
+            <p className="text-sm text-gray-400 mb-2">
+              Assentos: <span className="text-white font-mono">
+                {selecionadas.sort((a, b) => a - b).join(', ')}
+              </span>
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -223,57 +284,20 @@ export default function SeatPicker() {
               <input 
                 type="text" 
                 value={cpf}
-                // Usamos o handle específico para aplicar a máscara
                 onChange={handleChangeCpf}
-                maxLength={14} // 11 digitos + 3 simbolos
+                maxLength={14}
                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
                 placeholder="000.000.000-00"
                 required
               />
             </div>
             
-            <button type="submit" className="w-full bg-red-600 py-3 rounded font-bold text-white hover:bg-red-700 transition">
+            <button type="submit" className="w-full hover:cursor-pointer bg-red-600 py-3 rounded font-bold text-white hover:bg-red-700 transition">
               Confirmar e Salvar
             </button>
           </div>
         </form>
       )}
-
-      {/* Tabela */}
-      <div className="w-full mt-8">
-        <h2 className="text-2xl font-bold mb-4 text-left border-l-4 border-red-600 pl-3">
-          Banco de Dados (Simulação)
-        </h2>
-        
-        {reservas.length === 0 ? (
-          <p className="text-gray-500 italic">Nenhuma reserva feita ainda.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse bg-gray-900 rounded-lg overflow-hidden">
-              <thead className="bg-gray-800 text-gray-300">
-                <tr>
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Nome</th>
-                  <th className="p-3">CPF</th>
-                  <th className="p-3">Assentos</th>
-                  <th className="p-3">Data/Hora</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-400">
-                {reservas.map((reserva) => (
-                  <tr key={reserva.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                    <td className="p-3 font-mono text-xs">{reserva.id}</td>
-                    <td className="p-3">{reserva.nome}</td>
-                    <td className="p-3">{reserva.cpf}</td>
-                    <td className="p-3">{reserva.assentos.join(', ')}</td>
-                    <td className="p-3 text-sm">{reserva.data}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
