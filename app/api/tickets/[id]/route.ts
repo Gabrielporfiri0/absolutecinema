@@ -103,14 +103,19 @@ export async function PUT(
         const ticketExists = await collection.findOne({ _id: ObjectId.createFromHexString(id) })
 
         if (!ticketExists) return NextResponse.json({ error: 'Ingresso não encontrado', status: 404 })
+        
+        if (ticketExists.seat !== Number(data.seat)) {
+            const sentSeatAlreadyRegistered = await collection.findOne({ seat: Number(data.seat) })
+    
+            if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado', status: 400 })
+        }
 
-        const sentSeatAlreadyRegistered = await collection.findOne({ seat: Number(data.seat) })
-
-        if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado', status: 400 })
-
-        const numberOfTicketsWithThisCPF = await collection.countDocuments({ cpf: data.cpf })
-
-        if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets', status: 400 })
+        if (ticketExists.cpf !== data.cpf) {
+            const numberOfTicketsWithThisCPF = await collection.countDocuments({ cpf: data.cpf })
+    
+            if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets', status: 400 })
+        }
+        
 
         await collection.updateOne(
             { _id: ObjectId.createFromHexString(id) },
