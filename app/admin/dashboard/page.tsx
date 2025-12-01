@@ -1,37 +1,29 @@
 'use client'
 
+import AdminDeleteModal from "@/components/AdminDeleteModal";
 import TicketDeleteModal from "@/components/TicketDeleteModal";
 import TicketUpdateModal from "@/components/TicketUpdateModal";
+import { formatUTCToBR } from "@/lib/dates";
 import { localStorageUtil } from "@/lib/localStorage_";
+import { AdminUser } from "@/types/admin";
 import { TicketApi } from "@/types/ticket";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-type AdminUser = {
-    id: number;
-    usuario: string;
-    senha: string; // Em produção, isso seria um Hash, nunca a senha pura
-};
-
-const MOCK_ADMINS_INICIAIS: AdminUser[] = [
-    { id: 1, usuario: 'admin', senha: '123' }, // Admin padrão
-];
+import { toast } from "sonner";
 
 export default function Page() {
     const router = useRouter()
-
-    const [inputUsuario, setInputUsuario] = useState('');
     const [activeTab, setActiveTab] = useState<'reservas' | 'admins'>('reservas'); // Controla qual aba está visível
 
     const [loading, setLoading] = useState(true);
+    const [newAdminBeingRegistered, setNewAdminBeingRegistered] = useState(false);
     const [busca, setBusca] = useState('');
 
     const [reservas, setReservas] = useState<TicketApi[]>([]);
-    const [listaAdmins, setListaAdmins] = useState<AdminUser[]>(MOCK_ADMINS_INICIAIS);
+    const [admins, setAdmins] = useState<AdminUser[]>([]);
 
-    // --- ESTADOS DE CADASTRO DE NOVO ADMIN ---
-    const [novoAdminUser, setNovoAdminUser] = useState('');
-    const [novoAdminPass, setNovoAdminPass] = useState('');
+    const [newAdminUser, setNewAdminUser] = useState<string>('');
+    const [newAdminPassword, setNewAdminPassword] = useState<string>('');
 
     const reservasFiltradas = reservas.filter((reserva) =>
         reserva.cpf.includes(busca) ||
@@ -43,7 +35,7 @@ export default function Page() {
             const acessToken_ = localStorageUtil.getItem<string>('acessToken')
 
             if (!acessToken_) {
-                alert('Token não encontrado !!!')
+                toast.error('Token não encontrado !!!');
                 router.push('/')
                 return
             }
@@ -59,7 +51,7 @@ export default function Page() {
             const returnedResponse = await response.json()
 
             if (returnedResponse.status === 401) {
-                alert('Token inválido')
+                toast.error('Token inválido, faça login novamente');
                 router.push('/')
                 return
             }
@@ -69,40 +61,49 @@ export default function Page() {
             }
         } catch (error) {
             console.log('Erro ao buscar dados dos ingressos cadastrados: ', error)
-            alert('Erro ao buscar dados dos ingressos cadastrados !!!')
+            toast.error('Erro ao buscar dados dos ingressos cadastrados !!!');
         }
     }
 
-    // --- LÓGICA DE CADASTRAR NOVO ADMIN ---
-    const handleCadastrarAdmin = (e: React.FormEvent) => {
-        e.preventDefault();
+    const getAllAdmins = async () => {
+        try {
+            const acessToken_ = localStorageUtil.getItem<string>('acessToken')
 
-        if (!novoAdminUser || !novoAdminPass) {
-            alert("Preencha usuário e senha");
-            return;
+            if (!acessToken_) {
+                toast.error('Token não encontrado, faça login novamente');
+                router.push('/')
+                return
+            }
+
+            const response = await fetch('/api/admin/getAll', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${acessToken_}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+
+            const returnedResponse = await response.json()
+
+            if (returnedResponse.status === 401) {
+                toast.error('Token inválido, faça login novamente');
+                router.push('/')
+                return
+            }
+
+            if (returnedResponse.status === 200) {
+                setAdmins(returnedResponse.admin__)
+            }
+        } catch (error) {
+            console.log('Erro ao buscar dados dos admins cadastrados: ', error)
+            toast.error('Erro ao buscar dados dos admins cadastrados !!!');
         }
-
-        // Verifica se já existe esse usuário
-        if (listaAdmins.some(a => a.usuario === novoAdminUser)) {
-            alert("Este nome de usuário já existe!");
-            return;
-        }
-
-        const novoAdmin: AdminUser = {
-            id: Date.now(),
-            usuario: novoAdminUser,
-            senha: novoAdminPass
-        };
-
-        setListaAdmins([...listaAdmins, novoAdmin]);
-        setNovoAdminUser('');
-        setNovoAdminPass('');
-        alert(`Administrador "${novoAdminUser}" cadastrado com sucesso!`);
-    };
+    }
 
     useEffect(() => {
         setLoading(true);
         getAllReserves()
+        getAllAdmins()
         setLoading(false);
     }, []);
 
@@ -110,34 +111,78 @@ export default function Page() {
         const hasItWorked = localStorageUtil.removeItem('acessToken')
 
         if (hasItWorked) {
-            alert('Logout realizado com sucesso !!!')
+            toast.success('Logout realizado com sucesso !!!');
             router.push('/')
             return
         }
-
-        alert('Erro ao realizar logout, tente novamente mais tarde')
-    }
-
-    function formatUTCToBR(dateUTC: string): string {
-        const date = new Date(dateUTC);
-
-        if (isNaN(date.getTime())) {
-            return 'S/N'
-        }
-
-        const dia = String(date.getUTCDate()).padStart(2, "0");
-        const mes = String(date.getUTCMonth() + 1).padStart(2, "0");
-        const ano = date.getUTCFullYear();
-
-        const hora = String(date.getUTCHours()).padStart(2, "0");
-        const minuto = String(date.getUTCMinutes()).padStart(2, "0");
-
-        return `${dia}/${mes}/${ano} ${hora}:${minuto}`;
+        toast.error('Erro ao realizar logout, tente novamente mais tarde');
     }
 
     const handleUpdatePage = (): void => {
         getAllReserves();
+        getAllAdmins()
     };
+
+    const handleCreateANewAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        setNewAdminBeingRegistered(true);
+
+        const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+
+        if (!acessToken_) {
+            toast.error('Token não encontrado, faça login novamente');
+            setNewAdminBeingRegistered(false);
+            router.push('/')
+            return
+        }
+
+        if (!newAdminUser || !newAdminPassword) {
+            toast.error('Preencha usuário e senha para o novo admin');
+            setNewAdminBeingRegistered(false);
+            return
+        }
+
+        try {
+            const response = await fetch('/api/admin/register', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${acessToken_}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: newAdminUser,
+                    password: newAdminPassword
+                })
+            })
+
+            const returnedResponse = await response.json()
+
+            if (returnedResponse.status === 201) {
+                toast.success(`Administrador "${newAdminUser}" cadastrado com sucesso!`);
+                setNewAdminUser('')
+                setNewAdminPassword('')
+                getAllAdmins()
+                setNewAdminBeingRegistered(false);
+                return
+            }
+            else if (returnedResponse.status === 401) {
+                toast.error('Token inválido, faça login novamente');
+                setNewAdminBeingRegistered(false);
+                router.push('/')
+                return
+            } else {
+                toast.error(`Erro ao cadastrar novo admin: ${returnedResponse.error}`);
+                setNewAdminBeingRegistered(false);
+                return
+            }
+        } catch (error) {
+            console.log('Erro ao cadastrar novo admin: ', error)
+            toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde');
+        } finally {
+            setNewAdminBeingRegistered(false);
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-950 text-white p-8">
@@ -147,7 +192,7 @@ export default function Page() {
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-gray-800 pb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-red-600">Painel Administrativo</h1>
-                        <p className="text-gray-400">Bem-vindo, <span className="text-white font-bold">{inputUsuario}</span></p>
+                        <p className="text-gray-400">Bem-vindo</p>
                     </div>
                     <button
                         onClick={handleLogout}
@@ -246,10 +291,14 @@ export default function Page() {
                         <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-800 p-6 h-fit">
                             <h2 className="text-xl font-bold text-white mb-4 border-l-4 border-red-600 pl-3">Admins Ativos</h2>
                             <ul className="space-y-3">
-                                {listaAdmins.map((admin) => (
-                                    <li key={admin.id} className="flex justify-between items-center bg-black p-3 rounded border border-gray-800">
-                                        <span className="font-mono text-green-400">{admin.usuario}</span>
-                                        <span className="text-xs text-gray-500">ID: {admin.id}</span>
+                                {admins.map((admin) => (
+                                    <li key={String(admin._id)} className="flex justify-between items-center bg-black p-3 rounded border border-gray-800">
+                                        <span className="font-mono text-green-400">{admin.name}</span>
+
+                                        <AdminDeleteModal
+                                            adminID={String(admin._id)}
+                                            onUpdatePage={handleUpdatePage}
+                                        />
                                     </li>
                                 ))}
                             </ul>
@@ -258,42 +307,40 @@ export default function Page() {
                         {/* Direita: Formulário de Cadastro */}
                         <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-800 p-6">
                             <h2 className="text-xl font-bold text-white mb-4 border-l-4 border-green-600 pl-3">Novo Admin</h2>
-                            <form onSubmit={handleCadastrarAdmin} className="space-y-4">
+                            <form onSubmit={handleCreateANewAdmin} className="space-y-4">
                                 <div>
                                     <label className="block text-sm text-gray-400 mb-1">Novo Usuário</label>
                                     <input
                                         type="text"
-                                        value={novoAdminUser}
-                                        onChange={(e) => setNovoAdminUser(e.target.value)}
+                                        value={newAdminUser}
+                                        onChange={(e) => setNewAdminUser(e.target.value)}
                                         className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
                                         placeholder="Ex: coordenador"
+                                        disabled={newAdminBeingRegistered}
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm text-gray-400 mb-1">Senha de Acesso</label>
                                     <input
-                                        type="text" // Deixei text para visualizar ao criar, pode mudar para password
-                                        value={novoAdminPass}
-                                        onChange={(e) => setNovoAdminPass(e.target.value)}
+                                        type="text" // Em produção, usar type="password"
+                                        value={newAdminPassword}
+                                        onChange={(e) => setNewAdminPassword(e.target.value)}
                                         className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
                                         placeholder="Defina uma senha"
+                                        disabled={newAdminBeingRegistered}
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded transition"
+                                    className="w-full hover:cursor-pointer bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded transition"
+                                    disabled={newAdminBeingRegistered}
                                 >
                                     + Cadastrar Administrador
                                 </button>
                             </form>
-                            <p className="mt-4 text-xs text-gray-500">
-                                Nota: Como estamos sem Backend real, ao atualizar a página (F5), os novos admins criados aqui sumirão.
-                            </p>
                         </div>
-
                     </div>
                 )}
-
             </div>
         </div>
     )

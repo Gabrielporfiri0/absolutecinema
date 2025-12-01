@@ -17,6 +17,7 @@ import { Ticket, TicketApi } from "@/types/ticket";
 import { mascaraCPF, validarCPF } from "@/lib/cpfUtils";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface Props {
     ticketDataToBePossibleUpdated: TicketApi,
@@ -80,7 +81,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
         e.preventDefault();
 
         if (!hasChanges()) {
-            alert('Não houve alterações nos dados para atualização');
+            toast.warning('Não houve alterações nos dados para atualização');
             setIsOpen(false);
             return;
         }
@@ -94,7 +95,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
         try {
             const acessToken = localStorageUtil.getItem<string>('acessToken');
             if (!acessToken) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
+                toast.error('Sessão expirada. Por favor, faça login novamente.');
                 localStorageUtil.clear()
                 setIsLoading(false)
                 setIsOpen(false);
@@ -122,12 +123,12 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             const returnedResponse = await response.json()
 
             if (returnedResponse.status === 400) {
-                alert(`ID inválido, ou o assento ${formData.seat} já foi reservado, ou o CPF: ${formData.cpf} já foi registrado em 4 ingresso. Tente novamente.`)
+                toast.error(`ID inválido, ou o assento ${formData.seat} já foi reservado, ou o CPF: ${formData.cpf} já foi registrado em 4 ingresso. Tente novamente.`)
                 setIsLoading(false)
             }
 
             if (returnedResponse.status === 401) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
+                toast.error('Sessão expirada. Por favor, faça login novamente.');
                 localStorageUtil.clear()
                 setIsOpen(false)
                 setIsLoading(false)
@@ -135,12 +136,12 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                 return
             }
 
-            if (returnedResponse.status === 404) alert('Ingresso não encontrado')
+            if (returnedResponse.status === 404) toast.error('Ingresso não encontrado');
 
-            if (returnedResponse.status === 500) alert('Erro ao deletar ingresso, tente novamente mais tarde')
+            if (returnedResponse.status === 500) toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
 
             if (returnedResponse.status === 200) {
-                alert('Ingresso atualizado com sucesso !!!')
+                toast.success('Ingresso atualizado com sucesso !!!');
                 setIsOpen(false)
                 setIsLoading(false)
 
@@ -148,7 +149,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             }
         } catch (error) {
             console.error('Erro ao atualizar ingresso:', error);
-            alert('Erro ao atualizar ingresso. Tente novamente.');
+            toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
         } finally {
             setIsLoading(false);
         }

@@ -3,7 +3,7 @@
 import { localStorageUtil } from "@/lib/localStorage_"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-// import { toast } from "sonner"
+import { toast } from "sonner"
 
 export default function Page() {
     const [userName, setUserName] = useState<string>('')
@@ -17,8 +17,7 @@ export default function Page() {
         setIsProcessingLogin(true)
 
         if(!userName || !userPassword){
-            // toast.error('Por favor, informe usuário e senha')
-            alert('Por favor, informe usuário e senha')
+            toast.error('Por favor, informe usuário e senha')
             setIsProcessingLogin(false)
             return
         }
@@ -42,9 +41,7 @@ export default function Page() {
                 const tokenIsSet = localStorageUtil.setItem<string>('acessToken', returnedResponse.token)
                 
                 if(tokenIsSet){
-                    // toast.success('Login realizado com sucesso !!!')
-                    alert('Login realizado com sucesso !!!')
-
+                    toast.success('Login realizado com sucesso !!!')
                     setUserName('')
                     setUserPassword('')
                     setIsProcessingLogin(false)
@@ -56,28 +53,25 @@ export default function Page() {
             }
             
             if (returnedResponse.status === 404) {
-                // toast.error('Usuário não encontrado')
-                alert('Usuário não encontrado')
+                toast.error('Usuário não encontrado')
                 setIsProcessingLogin(false)
                 return
             }
             
             if (returnedResponse.status === 401) {
-                // toast.error('Senha inválida')
-                alert('Senha inválida')
+                toast.error('Senha inválida')
                 setIsProcessingLogin(false)
                 return
             }
 
             if (returnedResponse.status === 500) {
-                alert('Erro ao tentar logar admin, tente novamente mais tarde')
+                toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
                 setIsProcessingLogin(false)
                 return
             }
         } catch (error) {
             console.log('Erro ao tentar logar admin: ', error)
-            // toast.error('Erro ao tentar logar admin, tente novamente mais tarde')
-            alert('Erro ao tentar logar admin, tente novamente mais tarde')
+            toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
             setIsProcessingLogin(false)
         }
     }
@@ -112,11 +106,7 @@ export default function Page() {
                             disabled={isProcessingLogin}
                         />
                     </div>
-                    {/* {erroLogin && (
-                        <div className="bg-red-900/30 text-red-400 p-3 rounded text-sm text-center border border-red-900">
-                            {erroLogin}
-                        </div>
-                    )} */}
+             
                     <button 
                         type="submit" 
                         className="w-full hover:cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition duration-200"

@@ -3,9 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-
-// Importe os componentes que vamos criar
-
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-BR">
       <body className={`${inter.className} bg-gray-900 text-white`}>
         {/* Navbar no topo */}
         <Navbar />
@@ -30,6 +28,7 @@ export default function RootLayout({
           {children}
         </main>
 
+        <Toaster />
         {/* Footer na base */}
         <Footer />
       </body>
