@@ -30,7 +30,7 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
         setIsLoading(true);
 
         try {
-            const accessToken = localStorageUtil.getItem<string>('acessToken');
+            const accessToken = localStorageUtil.getItem('acessToken');
 
             if (!accessToken) {
                 toast.error('Sessão expirada. Por favor, faça login novamente.');
