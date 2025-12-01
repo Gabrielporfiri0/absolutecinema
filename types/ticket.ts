@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 
 export type Ticket = {
     name: string,
@@ -11,4 +12,13 @@ export type TicketDataToBeSent = {
     name: string,
     cpf: string,
     seat: string
+}
+
+export type TicketApi = {
+    _id: ObjectId,
+    name: string,
+    cpf: string,
+    seat: number,
+    createdAt: string,
+    updatedAt: string
 }

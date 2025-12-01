@@ -1,28 +1,17 @@
 'use client'
 
+import TicketDeleteModal from "@/components/TicketDeleteModal";
+import TicketUpdateModal from "@/components/TicketUpdateModal";
+import { localStorageUtil } from "@/lib/localStorage_";
+import { TicketApi } from "@/types/ticket";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-// --- TIPAGENS ---
-type Reserva = {
-    id: number;
-    nome: string;
-    cpf: string;
-    assentos: string[];
-    data: string;
-};
 
 type AdminUser = {
     id: number;
     usuario: string;
     senha: string; // Em produção, isso seria um Hash, nunca a senha pura
 };
-
-// --- DADOS MOCK (Simulação de Banco de Dados) ---
-const MOCK_RESERVAS: Reserva[] = [
-    { id: 1715001, nome: "Gabriel Moreira", cpf: "111.222.333-44", assentos: ["3-4", "3-5"], data: "28/11/2025 10:00" },
-    { id: 1715002, nome: "Eduardo Silva", cpf: "555.666.777-88", assentos: ["4-5"], data: "28/11/2025 11:30" },
-];
 
 const MOCK_ADMINS_INICIAIS: AdminUser[] = [
     { id: 1, usuario: 'admin', senha: '123' }, // Admin padrão
@@ -37,7 +26,7 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
 
-    const [reservas, setReservas] = useState<Reserva[]>([]);
+    const [reservas, setReservas] = useState<TicketApi[]>([]);
     const [listaAdmins, setListaAdmins] = useState<AdminUser[]>(MOCK_ADMINS_INICIAIS);
 
     // --- ESTADOS DE CADASTRO DE NOVO ADMIN ---
@@ -46,8 +35,43 @@ export default function Page() {
 
     const reservasFiltradas = reservas.filter((reserva) =>
         reserva.cpf.includes(busca) ||
-        reserva.nome.toLowerCase().includes(busca.toLowerCase())
+        reserva.name.toLowerCase().includes(busca.toLowerCase())
     );
+
+    const getAllReserves = async () => {
+        try {
+            const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+
+            if (!acessToken_) {
+                alert('Token não encontrado !!!')
+                router.push('/')
+                return
+            }
+
+            const response = await fetch('/api/tickets/getAllTickets', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${acessToken_}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+
+            const returnedResponse = await response.json()
+
+            if (returnedResponse.status === 401) {
+                alert('Token inválido')
+                router.push('/')
+                return
+            }
+
+            if (returnedResponse.status === 200) {
+                setReservas(returnedResponse.tickets__)
+            }
+        } catch (error) {
+            console.log('Erro ao buscar dados dos ingressos cadastrados: ', error)
+            alert('Erro ao buscar dados dos ingressos cadastrados !!!')
+        }
+    }
 
     // --- LÓGICA DE CADASTRAR NOVO ADMIN ---
     const handleCadastrarAdmin = (e: React.FormEvent) => {
@@ -76,12 +100,44 @@ export default function Page() {
         alert(`Administrador "${novoAdminUser}" cadastrado com sucesso!`);
     };
 
-    // --- SIMULAÇÃO DE CARREGAMENTO ---
     useEffect(() => {
         setLoading(true);
-        setReservas(MOCK_RESERVAS);
+        getAllReserves()
         setLoading(false);
     }, []);
+
+    const handleLogout = () => {
+        const hasItWorked = localStorageUtil.removeItem('acessToken')
+
+        if (hasItWorked) {
+            alert('Logout realizado com sucesso !!!')
+            router.push('/')
+            return
+        }
+
+        alert('Erro ao realizar logout, tente novamente mais tarde')
+    }
+
+    function formatUTCToBR(dateUTC: string): string {
+        const date = new Date(dateUTC);
+
+        if (isNaN(date.getTime())) {
+            return 'S/N'
+        }
+
+        const dia = String(date.getUTCDate()).padStart(2, "0");
+        const mes = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const ano = date.getUTCFullYear();
+
+        const hora = String(date.getUTCHours()).padStart(2, "0");
+        const minuto = String(date.getUTCMinutes()).padStart(2, "0");
+
+        return `${dia}/${mes}/${ano} ${hora}:${minuto}`;
+    }
+
+    const handleUpdatePage = (): void => {
+        getAllReserves();
+    };
 
     return (
         <div className="min-h-screen bg-gray-950 text-white p-8">
@@ -94,8 +150,8 @@ export default function Page() {
                         <p className="text-gray-400">Bem-vindo, <span className="text-white font-bold">{inputUsuario}</span></p>
                     </div>
                     <button
-                        onClick={() => router.push('/')}
-                        className="bg-red-900/50 hover:bg-red-900 text-red-200 px-4 py-2 rounded border border-red-800 transition"
+                        onClick={handleLogout}
+                        className="bg-red-900/50 hover:cursor-pointer hover:bg-red-900 text-red-200 px-4 py-2 rounded border border-red-800 transition"
                     >
                         Sair
                     </button>
@@ -105,13 +161,13 @@ export default function Page() {
                 <div className="flex gap-4 mb-8 border-b border-gray-800">
                     <button
                         onClick={() => setActiveTab('reservas')}
-                        className={`pb-2 px-4 font-medium transition ${activeTab === 'reservas' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                        className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'reservas' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
                     >
                         Gerenciar Reservas
                     </button>
                     <button
                         onClick={() => setActiveTab('admins')}
-                        className={`pb-2 px-4 font-medium transition ${activeTab === 'admins' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                        className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'admins' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
                     >
                         Gerenciar Administradores
                     </button>
@@ -143,21 +199,33 @@ export default function Page() {
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-black text-gray-300 uppercase text-sm font-semibold">
                                             <tr>
-                                                <th className="p-4 border-b border-gray-800">ID</th>
+                                                {/* <th className="p-4 border-b border-gray-800">ID</th> */}
                                                 <th className="p-4 border-b border-gray-800">Nome</th>
                                                 <th className="p-4 border-b border-gray-800">CPF</th>
-                                                <th className="p-4 border-b border-gray-800">Cadeiras</th>
+                                                <th className="p-4 border-b border-gray-800">Cadeira</th>
                                                 <th className="p-4 border-b border-gray-800">Data</th>
+                                                <th className="p-4 border-b border-gray-800">Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-800 text-gray-300">
                                             {reservasFiltradas.map((reserva) => (
-                                                <tr key={reserva.id} className="hover:bg-gray-800/50">
-                                                    <td className="p-4 text-xs text-gray-500">#{reserva.id}</td>
-                                                    <td className="p-4 text-white">{reserva.nome}</td>
+                                                <tr key={String(reserva._id)} className="hover:bg-gray-800/50">
+                                                    {/* <td className="p-4 text-xs text-gray-500">#{reserva._id}</td> */}
+                                                    <td className="p-4 text-white">{reserva.name}</td>
                                                     <td className="p-4 text-sm">{reserva.cpf}</td>
-                                                    <td className="p-4 text-sm">{reserva.assentos.join(', ')}</td>
-                                                    <td className="p-4 text-sm">{reserva.data}</td>
+                                                    <td className="p-4 text-sm">{reserva.seat}</td>
+                                                    <td className="p-4 text-sm">{formatUTCToBR(reserva.createdAt)}</td>
+                                                    <td className="p-4 text-sm flex">
+                                                        <TicketDeleteModal
+                                                            ticketID={String(reserva._id)}
+                                                            onUpdatePage={handleUpdatePage}
+                                                        />
+
+                                                        <TicketUpdateModal
+                                                            ticketDataToBePossibleUpdated={reserva}
+                                                            onUpdatePage={handleUpdatePage}
+                                                        />
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
