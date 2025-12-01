@@ -4,7 +4,7 @@ import { getAdminsCollection } from "../mongodb";
 
 export async function GET(request: NextRequest) {
     try {
-        const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = await validateAuth(request)
 
         if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })  
         

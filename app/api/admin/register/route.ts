@@ -18,7 +18,7 @@ export async function POST(request: NextRequest){
             return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
         }
         
-        const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = await validateAuth(request)
 
         if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })  
 

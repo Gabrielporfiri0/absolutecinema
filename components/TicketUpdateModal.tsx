@@ -93,7 +93,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
         setIsLoading(true);
 
         try {
-            const acessToken = localStorageUtil.getItem<string>('acessToken');
+            const acessToken = localStorageUtil.getItem('acessToken');
             if (!acessToken) {
                 toast.error('Sessão expirada. Por favor, faça login novamente.');
                 localStorageUtil.clear()

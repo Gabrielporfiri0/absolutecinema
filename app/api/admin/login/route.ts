@@ -4,9 +4,9 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "@/lib/jwt_";
 import { AdminDataToBeSentInRegister } from "@/types/admin";
 
-export async function POST(request: NextRequest){
-    try{
-        let data:AdminDataToBeSentInRegister = {
+export async function POST(request: NextRequest) {
+    try {
+        let data: AdminDataToBeSentInRegister = {
             name: '',
             password: ''
         }
@@ -22,16 +22,28 @@ export async function POST(request: NextRequest){
 
         const adminExists = await adminsCollection.findOne({ name: data.name })
 
-        if(!adminExists) return NextResponse.json({ error: 'Usuário não encontrado', status: 404 })
-        
+        if (!adminExists) return NextResponse.json({ error: 'Usuário não encontrado', status: 404 })
+
         const isValidPassword = await bcrypt.compare(data.password, adminExists.password)
 
-        if(!isValidPassword) return NextResponse.json({ error: 'Credenciais inválidas', status: 401 })
+        if (!isValidPassword) return NextResponse.json({ error: 'Credenciais inválidas', status: 401 })
 
-        const token_ = generateToken({ userId: adminExists._id, userName: adminExists.name, role: 'admin' })
+        const token_ = await generateToken({ userId: String(adminExists._id), userName: adminExists.name, role: 'admin' })
 
-        return NextResponse.json({ message: 'Login realizado com sucesso', token: token_, status: 200 })
-    }catch(error){
+        const response =  NextResponse.json({ message: 'Login realizado com sucesso', token: token_, status: 200 })
+        
+        response.cookies.set({
+            name: 'accessToken',
+            value: token_,
+            httpOnly: true,      
+            secure: true,
+            sameSite: 'strict',
+            maxAge: 3600,     
+            path: '/',
+        });
+
+        return response
+    } catch (error) {
         console.log('Erro ao realizar login do admin: ', error)
         return NextResponse.json({ error: 'Erro ao realizar login do admin', status: 500 })
     }

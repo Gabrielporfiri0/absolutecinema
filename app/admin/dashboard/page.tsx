@@ -10,6 +10,7 @@ import { TicketApi } from "@/types/ticket";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Page() {
     const router = useRouter()
@@ -25,6 +26,13 @@ export default function Page() {
     const [newAdminUser, setNewAdminUser] = useState<string>('');
     const [newAdminPassword, setNewAdminPassword] = useState<string>('');
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [isProcessingLogout, setIsProcessingLogout] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     const reservasFiltradas = reservas.filter((reserva) =>
         reserva.cpf.includes(busca) ||
         reserva.name.toLowerCase().includes(busca.toLowerCase())
@@ -32,7 +40,7 @@ export default function Page() {
 
     const getAllReserves = async () => {
         try {
-            const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+            const acessToken_ = localStorageUtil.getItem('acessToken')
 
             if (!acessToken_) {
                 toast.error('Token não encontrado !!!');
@@ -67,7 +75,7 @@ export default function Page() {
 
     const getAllAdmins = async () => {
         try {
-            const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+            const acessToken_ = localStorageUtil.getItem('acessToken')
 
             if (!acessToken_) {
                 toast.error('Token não encontrado, faça login novamente');
@@ -107,15 +115,59 @@ export default function Page() {
         setLoading(false);
     }, []);
 
-    const handleLogout = () => {
-        const hasItWorked = localStorageUtil.removeItem('acessToken')
+    const handleLogout = async () => {
+        setIsProcessingLogout(true);
 
-        if (hasItWorked) {
-            toast.success('Logout realizado com sucesso !!!');
+        const acessToken_ = localStorageUtil.getItem('acessToken')
+
+        if (!acessToken_) {
+            toast.error('Token não encontrado, faça login novamente');
+            setIsProcessingLogout(false);
             router.push('/')
             return
         }
-        toast.error('Erro ao realizar logout, tente novamente mais tarde');
+
+        try {
+            const response = await fetch('/api/admin/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${acessToken_}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+
+            const returnedResponse = await response.json()
+
+            if (returnedResponse.status === 500) {
+                toast.error('Erro ao realizar logout, tente novamente mais tarde');
+                setIsProcessingLogout(false);
+                return
+            }
+
+            if (returnedResponse.status === 401) {
+                toast.error('Token inválido, faça login novamente');
+                setIsProcessingLogout(false);
+                router.push('/')
+                return
+            }
+
+            const hasItWorked = localStorageUtil.removeItem('acessToken')
+
+            if (!hasItWorked) {
+                toast.error('Erro ao realizar logout, tente novamente mais tarde');
+                setIsProcessingLogout(false);
+                return
+            }
+
+            toast.success('Logout realizado com sucesso !!!');
+            setIsProcessingLogout(false);
+            router.push('/')
+            return
+        } catch (error) {
+            console.log('Erro ao deslogar admin: ', error)
+            toast.error('Erro ao realizar logout, tente novamente mais tarde');
+            setIsProcessingLogout(false);
+        }
     }
 
     const handleUpdatePage = (): void => {
@@ -128,7 +180,7 @@ export default function Page() {
 
         setNewAdminBeingRegistered(true);
 
-        const acessToken_ = localStorageUtil.getItem<string>('acessToken')
+        const acessToken_ = localStorageUtil.getItem('acessToken')
 
         if (!acessToken_) {
             toast.error('Token não encontrado, faça login novamente');
@@ -188,7 +240,6 @@ export default function Page() {
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <div className="max-w-6xl mx-auto">
 
-                {/* Cabeçalho e Logout */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-gray-800 pb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-red-600">Painel Administrativo</h1>
@@ -197,12 +248,12 @@ export default function Page() {
                     <button
                         onClick={handleLogout}
                         className="bg-red-900/50 hover:cursor-pointer hover:bg-red-900 text-red-200 px-4 py-2 rounded border border-red-800 transition"
+                        disabled={isProcessingLogout}
                     >
                         Sair
                     </button>
                 </div>
 
-                {/* --- MENU DE ABAS --- */}
                 <div className="flex gap-4 mb-8 border-b border-gray-800">
                     <button
                         onClick={() => setActiveTab('reservas')}
@@ -218,9 +269,6 @@ export default function Page() {
                     </button>
                 </div>
 
-                {/* =======================================================
-            CONTEÚDO DA ABA: RESERVAS
-           ======================================================= */}
                 {activeTab === 'reservas' && (
                     <>
                         {/* Barra de Pesquisa */}
@@ -244,7 +292,6 @@ export default function Page() {
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-black text-gray-300 uppercase text-sm font-semibold">
                                             <tr>
-                                                {/* <th className="p-4 border-b border-gray-800">ID</th> */}
                                                 <th className="p-4 border-b border-gray-800">Nome</th>
                                                 <th className="p-4 border-b border-gray-800">CPF</th>
                                                 <th className="p-4 border-b border-gray-800">Cadeira</th>
@@ -255,7 +302,6 @@ export default function Page() {
                                         <tbody className="divide-y divide-gray-800 text-gray-300">
                                             {reservasFiltradas.map((reserva) => (
                                                 <tr key={String(reserva._id)} className="hover:bg-gray-800/50">
-                                                    {/* <td className="p-4 text-xs text-gray-500">#{reserva._id}</td> */}
                                                     <td className="p-4 text-white">{reserva.name}</td>
                                                     <td className="p-4 text-sm">{reserva.cpf}</td>
                                                     <td className="p-4 text-sm">{reserva.seat}</td>
@@ -281,9 +327,6 @@ export default function Page() {
                     </>
                 )}
 
-                {/* =======================================================
-            CONTEÚDO DA ABA: ADMINISTRADORES
-           ======================================================= */}
                 {activeTab === 'admins' && (
                     <div className="grid md:grid-cols-2 gap-8">
 
@@ -321,14 +364,23 @@ export default function Page() {
                                 </div>
                                 <div>
                                     <label className="block text-sm text-gray-400 mb-1">Senha de Acesso</label>
-                                    <input
-                                        type="text" // Em produção, usar type="password"
-                                        value={newAdminPassword}
-                                        onChange={(e) => setNewAdminPassword(e.target.value)}
-                                        className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
-                                        placeholder="Defina uma senha"
-                                        disabled={newAdminBeingRegistered}
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={newAdminPassword}
+                                            onChange={(e) => setNewAdminPassword(e.target.value)}
+                                            className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
+                                            placeholder="Defina uma senha"
+                                            disabled={newAdminBeingRegistered}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={togglePasswordVisibility}
+                                            className="hover:cursor-pointer"
+                                        >
+                                            {showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     type="submit"

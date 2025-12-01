@@ -1,10 +1,10 @@
 
 export const localStorageUtil = {
 
-    setItem: <T>(key: string, value: T): boolean => {
+    setItem: (key: string, value: string): boolean => {
         if(typeof window !== 'undefined') {
             try{
-                window.localStorage.setItem(key, JSON.stringify(value))
+                window.localStorage.setItem(key, value)
                 return true
             }catch(error){
                 console.log('Erro ao salvar no local storage')
@@ -14,12 +14,12 @@ export const localStorageUtil = {
         return false
     },
 
-    getItem: <T>(key: string): T | null => {
+    getItem: (key: string): string | null => {
         if(typeof window !== 'undefined'){
             try{
                 const item = window.localStorage.getItem(key)
 
-                if(item) return JSON.parse(item)
+                if(item) return item
                 return null
             }catch(error){
                 console.log(`Erro ao ler ${key} do local storage: `, error)

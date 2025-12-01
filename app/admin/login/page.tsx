@@ -38,7 +38,7 @@ export default function Page() {
 
             if (returnedResponse.status === 200) {
                 
-                const tokenIsSet = localStorageUtil.setItem<string>('acessToken', returnedResponse.token)
+                const tokenIsSet = localStorageUtil.setItem('acessToken', returnedResponse.token)
                 
                 if(tokenIsSet){
                     toast.success('Login realizado com sucesso !!!')

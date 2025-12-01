@@ -16,7 +16,7 @@ export async function GET(
             
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
             
-        const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = await validateAuth(request)
         
         if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
                 
@@ -48,7 +48,7 @@ export async function DELETE(
 
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
 
-        const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = await validateAuth(request)
 
         if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
 
@@ -78,7 +78,7 @@ export async function PUT(
 
         if (!/^[0-9a-fA-F]{24}$/.test(id)) return NextResponse.json({ error: 'ID inválido', status: 400 })
 
-        const aValidTokenWasSent = validateAuth(request)
+        const aValidTokenWasSent = await validateAuth(request)
 
         if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
 
