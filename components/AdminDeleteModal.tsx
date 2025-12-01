@@ -1,4 +1,4 @@
-'use client'
+// 'use client'
 
 import {
     Dialog,
@@ -17,11 +17,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface Props {
-    ticketID: string;
+    adminID: string;
     onUpdatePage?: () => void;
 }
 
-export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
+export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -41,7 +41,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                 return;
             }
 
-            const response = await fetch(`/api/tickets/${ticketID}`, {
+            const response = await fetch(`/api/admin/${adminID}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -68,28 +68,28 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
             }
 
             if (returnedResponse.status === 404) {
-                toast.error('Ingresso não encontrado');
+                toast.error('Admin não encontrado');
                 setIsLoading(false);
                 setIsOpen(false);
                 return;
             }
 
             if (returnedResponse.status === 500) {
-                toast.error('Erro ao deletar ingresso, tente novamente mais tarde');
+                toast.error('Erro ao deletar admin, tente novamente mais tarde');
                 setIsLoading(false);
                 setIsOpen(false);
                 return;
             }
 
             if (returnedResponse.status === 200) {
-                toast.success('Ingresso excluído com sucesso !!!');
+                toast.success('Admin excluído com sucesso !!!');
                 setIsLoading(false);
                 setIsOpen(false);
                 if (onUpdatePage) onUpdatePage()
             }
         } catch (error) {
-            console.error('Erro ao deletar ingresso:', error);
-            toast.error('Erro ao deletar ingresso, tente novamente mais tarde')
+            console.error('Erro ao deletar admin:', error);
+            toast.error('Erro ao deletar admin, tente novamente mais tarde');
         } finally {
             setIsLoading(false);
         }
@@ -116,7 +116,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                         </DialogTitle>
                     </div>
                     <DialogDescription className="pt-2">
-                        Tem certeza que deseja excluir este ingresso?
+                        Tem certeza que deseja excluir este admin?
                         <br />
                         <strong>Esta ação não poderá ser desfeita.</strong>
                     </DialogDescription>

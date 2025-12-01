@@ -3,9 +3,7 @@
 import { mascaraCPF, validarCPF } from '@/lib/cpfUtils';
 import { TicketDataToBeSent } from '@/types/ticket';
 import { useState, useEffect } from 'react';
-// import { toast } from 'sonner';
-
-// --- FUNÇÕES UTILITÁRIAS (Helpers) ---
+import { toast } from 'sonner';
 
 const layoutInicial = [
   ['l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l'],
@@ -17,6 +15,8 @@ const layoutInicial = [
   ['l','l','l','l','l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', '1', '1', '1', '1'],
   ['1', '1', '1', '1', '1','l','l', 'l', 'l', 'l', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
 ];
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Função para gerar o mapa de assentos com números
 const gerarMapaAssentos = () => {
@@ -75,10 +75,10 @@ export default function SeatPicker() {
     setCpf(mascaraCPF(e.target.value));
   };
 
-  const handleSeatClick = (numeroAssento: number, fileira: number, assento: number) => {
+  const handleSeatClick = (numeroAssento: number) => {
     // Verifica se o assento já está reservado
     if (seatsReserved.includes(numeroAssento)) {
-      alert("Este assento já está reservado!");
+      toast.warning('Este assento já está reservado!');
       return;
     }
 
@@ -87,10 +87,8 @@ export default function SeatPicker() {
       setSelecionadas(selecionadas.filter(num => num !== numeroAssento));
     } else {
       // Tenta selecionar um NOVO assento
-      // VERIFICAÇÃO DE LIMITE AQUI:
       if (selecionadas.length >= 4) {
-        alert("Você atingiu o limite máximo de 4 assentos por reserva.");
-        // toast('Você atingiu o limite máximo de 4 assentos por reserva')
+        toast.error('Você atingiu o limite máximo de 4 assentos por CPF.');
         return;
       }
       
@@ -101,25 +99,23 @@ export default function SeatPicker() {
   const handleConfirmarReserva = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Validação de preenchimento básico
     if (!nome || !cpf) {
-      alert("Por favor, preencha nome e CPF.");
+      toast.error('Por favor, preencha nome e CPF.');
       return;
     }
 
-    // 2. Validação Matemática do CPF
     if (!validarCPF(cpf)) {
-      alert("CPF Inválido! Por favor verifique o número.");
+      toast.error('CPF Inválido! Por favor verifique o número.');
       return;
     }
 
     try {
-      
+
       for(let i = 0; i < selecionadas.length; i++){
         const novaReserva: TicketDataToBeSent = {
           name: nome,
           cpf: cpf,
-          seat: selecionadas[i].toString() // Converte para string se a API espera string
+          seat: selecionadas[i].toString() // Converte para string pois a api espera string
         };
 
         // Enviar reserva para a API
@@ -133,17 +129,16 @@ export default function SeatPicker() {
         
         const returnedData = await response.json()
 
-        if(returnedData.status === 400){
-          alert(`Erro ao reservar cadeira ${selecionadas[i]}: ${returnedData.error}`)
+        if(returnedData.status === 400 || returnedData.status === 500){
+          toast.error(`Erro ao reservar assento ${selecionadas[i]}: ${returnedData.error}`);
+          await delay(2000);
           continue
         }
 
-        if(returnedData.status === 500){
-          alert(`Erro ao reservar cadeira ${selecionadas[i]}: ${returnedData.error}`)
-          continue
+        if (returnedData.status === 201){
+          toast.success(`Assento ${selecionadas[i]} reservado com sucesso!`); 
+          await delay(2000);
         }
-
-        if (returnedData.status === 201) alert(`Reserva da cadeira ${selecionadas[i]} feita com sucesso !!!`);
       }
 
       // Atualizar lista de assentos reservados
@@ -155,7 +150,7 @@ export default function SeatPicker() {
       setCpf('');
     } catch (error) {
       console.error('Erro ao enviar reserva:', error);
-      alert("Erro ao realizar reserva. Tente novamente.");
+      toast.error('Erro ao realizar reserva(s), tente novamente mais tarde');
     }
   };
 
@@ -195,7 +190,7 @@ export default function SeatPicker() {
                     }`}
                     onClick={() => {
                       if (numeroAssento > 0 && status !== '1') {
-                        handleSeatClick(numeroAssento, fIndex, aIndex);
+                        handleSeatClick(numeroAssento);
                       }
                     }}
                   >
