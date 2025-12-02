@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 CineUEMS
 
-## Getting Started
+Sistema web desenvolvido para gerenciamento de reservas de assentos em sessões de cinema, criado como projeto acadêmico para a Universidade Estadual de Mato Grosso do Sul (UEMS).  
+O sistema possibilita que usuários realizem reservas de forma simples e que administradores controlem a ocupação e os registros.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📌 Funcionalidades
+
+### 👤 Usuário
+- Visualização do filme disponível
+- Seleção interativa de assentos
+- Identificação visual:
+  - 🟩 Livre  
+  - 🟨 Selecionado  
+  - 🟥 Ocupado
+- Reserva com nome e CPF
+- Validação automática de CPF
+- Máximo de 4 ingressos por CPF
+- Bloqueio de assentos já reservados
+- Exibição em tempo real dos assentos ocupados
+- Obrigatoriedade de assistir a um vídeo antes da reserva
+
+### 🔐 Administrador
+Acesso disponível em: `/admin/login`
+
+- Login com autenticação via token
+- Sessão salva em LocalStorage
+- Painel administrativo
+- Visualização de reservas
+- Exclusão de reservas
+- Cadastro de administradores
+- Exclusão de administradores
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Front-end
+- Next.js  
+- TypeScript:  
+- React
+- Tailwind CSS
+- Lucide React
+- Shadcn/UI 
+
+### Back-end
+- Next.js API Routes
+- Node.js 
+- Express.js
+
+### Banco de Dados
+- MongoDB
+- MongoDB Native Driver
+
+### Segurança e Autenticação
+- JWT (JSON Web Token)
+- Bcrypt.js
+- LocalStorage
+
+### Hospedagem e Infraestrutura (Deploy)
+- Vercel
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+CineUEMS/
+│
+├── public/             # Arquivos estáticos
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── routes/             # Rotas do sistema
+├── db/                 # Configuração do banco de dados
+├── views/              # Telas HTML
+├── server.js           # Arquivo principal
+└── package.json        # Dependências
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Como Executar o Projeto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1️⃣ Clone o repositório
+```bash
+git clone https://github.com/Gabrielporfiri0/absolutecinema.git
+```
 
-## Learn More
+### 2️⃣ Instale as dependências
+```bash
+npm i
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3️⃣ Inicie o servidor
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Acesse o sistema em:
+```
+http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🔑 Acesso Administrativo
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+http://localhost:3000/admin/login
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Cadastre administradores diretamente pelo banco ou pela tela administrativa.
+
+---
+
+## 📄 Licença
+
+Projeto com finalidade educacional.  
+Uso livre para fins acadêmicos.
+
+---
+
+## 👨‍💻 Desenvolvedores
+
+Projeto desenvolvido por estudantes da UEMS  
+Curso: Sistemas de Informação
+
+---
+
+## 📞 Suporte
+
+Em caso de dúvidas ou melhorias, entre em contato com os desenvolvedores do projeto.
+
+---
+
+🎥 *CineUEMS — Sua sessão começa aqui!* 🍿
