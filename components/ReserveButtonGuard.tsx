@@ -8,7 +8,7 @@ type Props = {
   filmId: string | number;
   className?: string;
   children?: React.ReactNode;
-  videoSrc?: string; // optional source for the modal video
+  videoSrc?: string; 
 };
 
 const LOCAL_KEY = 'watched_reservation_video_v1';
@@ -32,7 +32,6 @@ export default function ReserveButtonGuard({ filmId, className, children, videoS
       return;
     }
 
-    // open the modal for the first-time watch
     setOpenModal(true);
   };
 
@@ -47,7 +46,6 @@ export default function ReserveButtonGuard({ filmId, className, children, videoS
         onClose={() => setOpenModal(false)}
         videoSrc={videoSrc || 'https://www.youtube.com/watch?v=a3ICNMQW7Ok'}
         onComplete={() => {
-          // mark as watched then navigate
           try { localStorage.setItem(LOCAL_KEY, 'true'); } catch (err) {}
           setOpenModal(false);
           goToSeatPicker();

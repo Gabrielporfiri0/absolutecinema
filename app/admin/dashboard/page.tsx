@@ -271,7 +271,6 @@ export default function Page() {
 
                 {activeTab === 'reservas' && (
                     <>
-                        {/* Barra de Pesquisa */}
                         <div className="bg-gray-900 p-6 rounded-lg shadow-lg mb-8 border border-gray-800">
                             <label className="block text-sm font-medium text-gray-400 mb-2">Pesquisar Inscrito</label>
                             <input
@@ -283,7 +282,6 @@ export default function Page() {
                             />
                         </div>
 
-                        {/* Tabela de Reservas */}
                         <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-800">
                             {loading ? (
                                 <div className="p-12 text-center text-gray-400">Carregando dados...</div>
