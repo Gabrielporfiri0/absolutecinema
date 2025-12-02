@@ -18,7 +18,6 @@ const layoutInicial = [
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Função para gerar o mapa de assentos com números
 const gerarMapaAssentos = () => {
   const mapa: { numero: number; fileira: number; assento: number; status: string }[] = [];
   let contador = 1;
@@ -48,7 +47,6 @@ export default function SeatPicker() {
   const [cpf, setCpf] = useState('');
   const [seatsReserved, setSeatsReserved] = useState<number[]>([]);
 
-  // Buscar assentos reservados quando o componente carregar
   useEffect(() => {
     getSeatsThatAreReserved();
   }, []);
@@ -70,23 +68,19 @@ export default function SeatPicker() {
     }
   };
 
-  // Atualiza o CPF aplicando a máscara
   const handleChangeCpf = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(mascaraCPF(e.target.value));
   };
 
   const handleSeatClick = (numeroAssento: number) => {
-    // Verifica se o assento já está reservado
     if (seatsReserved.includes(numeroAssento)) {
       toast.warning('Este assento já está reservado!');
       return;
     }
 
-    // Se o assento já está selecionado, removemos ele (sempre permitido)
     if (selecionadas.includes(numeroAssento)) {
       setSelecionadas(selecionadas.filter(num => num !== numeroAssento));
     } else {
-      // Tenta selecionar um NOVO assento
       if (selecionadas.length >= 4) {
         toast.error('Você atingiu o limite máximo de 4 assentos por CPF.');
         return;
@@ -118,7 +112,6 @@ export default function SeatPicker() {
           seat: selecionadas[i].toString() // Converte para string pois a api espera string
         };
 
-        // Enviar reserva para a API
         const response = await fetch('/api/tickets/register', {
           method: 'POST',
           headers: {
@@ -141,10 +134,8 @@ export default function SeatPicker() {
         }
       }
 
-      // Atualizar lista de assentos reservados
       await getSeatsThatAreReserved();
       
-      // Limpa
       setSelecionadas([]);
       setNome('');
       setCpf('');
@@ -161,7 +152,6 @@ export default function SeatPicker() {
     return 'bg-gray-600 hover:bg-gray-500';
   };
 
-  // Função para obter o número do assento baseado na fileira e posição
   const getNumeroAssento = (fileira: number, assento: number) => {
     const assentoInfo = mapaAssentos.find(a => a.fileira === fileira && a.assento === assento);
     return assentoInfo ? assentoInfo.numero : 0;
@@ -170,13 +160,10 @@ export default function SeatPicker() {
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
       
-      {/* Wrapper Externo: Cria a barra de rolagem (scroll) se precisar */}
       <div className="w-full overflow-x-auto pb-8 mb-4 no-scrollbar">
         
-        {/* Wrapper Interno: min-w-max força os assentos a terem o tamanho real */}
         <div className="min-w-max flex flex-col gap-2 items-center mx-auto px-4">
           
-          {/* Renderização das Fileiras */}
           {layoutInicial.map((fileira, fIndex) => (
             <div key={fIndex} className="flex gap-2 justify-center">
               {fileira.map((status, aIndex) => {
@@ -210,7 +197,6 @@ export default function SeatPicker() {
         <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-red-700"></div> Ocupada</div>
       </div>
 
-      {/* Formulário */}
       {selecionadas.length > 0 && (
         <form onSubmit={handleConfirmarReserva} className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mb-8">
           <h3 className="text-xl font-bold mb-4 text-white">Dados da Reserva</h3>

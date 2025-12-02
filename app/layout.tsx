@@ -20,16 +20,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${inter.className} bg-gray-900 text-white`}>
-        {/* Navbar no topo */}
         <Navbar />
 
-        {/* O 'children' é o conteúdo da página atual (page.tsx) */}
         <main className="min-h-screen">
           {children}
         </main>
 
         <Toaster />
-        {/* Footer na base */}
         <Footer />
       </body>
     </html>

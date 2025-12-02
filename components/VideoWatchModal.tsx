@@ -17,24 +17,20 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
 
   useEffect(() => {
     if (!open && videoRef.current) {
-      // Pause & reset when modal closes so next open starts from 0
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
-      // destroy youtube player if present
       if (playerRef.current && playerRef.current.destroy) {
         try { playerRef.current.destroy(); } catch (e) {}
       }
     }
   }, [open]);
 
-  // detect if we should use YouTube embed
   useEffect(() => {
     if (!videoSrc) return setIsYouTube(false);
     const lower = videoSrc.toLowerCase();
     setIsYouTube(lower.includes('youtube.com') || lower.includes('youtu.be'));
   }, [videoSrc]);
 
-  // If we need to embed a YouTube link, load the iframe API and create a player instance
   useEffect(() => {
     if (!isYouTube || !open || !videoSrc || !containerRef.current) return;
 
@@ -42,13 +38,11 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
 
     const extractVideoId = (url: string) => {
       try {
-        // handle both youtube.com/watch?v= and youtu.be short links
         const u = new URL(url);
         if (u.hostname.includes('youtu.be')) {
           return u.pathname.slice(1);
         }
         if (u.searchParams.has('v')) return u.searchParams.get('v');
-        // fallback: try to find /embed/ID
         const parts = u.pathname.split('/');
         return parts[parts.length - 1];
       } catch (e) {
@@ -58,10 +52,7 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
 
     const createPlayer = (id: string) => {
       try {
-        // @ts-ignore
-        // If YT API already loaded
         if ((window as any).YT && (window as any).YT.Player) {
-          // @ts-ignore
           playerRef.current = new (window as any).YT.Player(containerRef.current, {
             width: '100%',
             height: '100%',
@@ -69,7 +60,6 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
             playerVars: { autoplay: 1, controls: 1, rel: 0, enablejsapi: 1 },
             events: {
               onStateChange: (e: any) => {
-                // 0 === ended
                 if (e.data === 0) {
                   onComplete();
                 }
@@ -77,10 +67,8 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
             }
           });
         } else {
-          // wait for API to be ready
           (window as any).onYouTubeIframeAPIReady = function () {
             if (!mounted) return;
-            // @ts-ignore
             playerRef.current = new (window as any).YT.Player(containerRef.current, {
               width: '100%',
               height: '100%',
@@ -102,7 +90,6 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
     const id = extractVideoId(videoSrc);
     if (!id) return;
 
-    // load YT iframe API if not present
     if (!(window as any).YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -129,7 +116,6 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
         <h3 className="text-center text-2xl font-semibold text-white mb-4">Assista o vídeo abaixo para concluir a reserva</h3>
 
         <div className="mx-auto w-full max-w-2xl aspect-video bg-black rounded-md overflow-hidden border border-white/10 p-2">
-          {/* If incoming source is a YouTube link, embed using the IFrame API so we can detect end. Otherwise use a normal <video> element */}
           {isYouTube && videoSrc ? (
             <div ref={containerRef} className="w-full h-full" />
           ) : (
@@ -140,7 +126,6 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
               autoPlay
               className="w-full h-full object-cover rounded"
               onEnded={() => {
-                // when the user watches until end, notify parent
                 onComplete();
               }}
             />
@@ -158,5 +143,4 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
   );
 }
 
-// Client-side: We can't use the YT API server-side. Add a side-effect hook to load the YouTube IFrame API and create a player
 VideoWatchModal.displayName = 'VideoWatchModal';
