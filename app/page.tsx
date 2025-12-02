@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import ReserveButtonGuard from '@/components/ReserveButtonGuard';
 
-// Dados do Filme em Destaque
 const filmeDestaque = {
   id: 1,
   titulo: "Duna: Parte 2",
