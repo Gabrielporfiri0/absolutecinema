@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import ReserveButtonGuard from '@/components/ReserveButtonGuard';
 
 // Dados do Filme em Destaque
 const filmeDestaque = {
@@ -74,13 +74,12 @@ export default function HomePage() {
 
             {/* Botão de Reserva */}
             <div className="mt-auto">
-              <Link 
-                // CORREÇÃO 2: Adicionadas as crases (`) dentro das chaves
-                href={`/filme/${filmeDestaque.id}`}
+              <ReserveButtonGuard
+                filmId={filmeDestaque.id}
                 className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40"
               >
                 Reservar Assento
-              </Link>
+              </ReserveButtonGuard>
               <p className="text-center md:text-left text-xs text-gray-500 mt-2 ml-1">
                 Sessão única às {filmeDestaque.horarioSessao}
               </p>
