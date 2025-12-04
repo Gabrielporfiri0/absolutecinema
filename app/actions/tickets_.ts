@@ -3,22 +3,10 @@
 import { ObjectId } from 'mongodb';
 import { getTicketsCollection } from '../api/tickets/mongodb';
 import { verifyToken } from '@/lib/jwt_';
-import { cookies } from 'next/headers';
 
-export async function deleteTicket(ticketID: string) {
+export async function deleteTicket(ticketID: string, accessToken__: string) {
     try {
-        const cookieStore = await cookies();
-        const accessToken = cookieStore.get('accessToken')?.value;
-        
-        if (!accessToken) {
-            return {
-                success: false,
-                status: 401,
-                message: 'Sessão expirada. Por favor, faça login novamente.'
-            };
-        }
-
-        const isAValidToken = await verifyToken(accessToken);
+        const isAValidToken = await verifyToken(accessToken__);
         
         if (!isAValidToken.valid) {
             return {

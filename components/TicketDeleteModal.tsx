@@ -30,15 +30,51 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
     const handleDelete = async () => {
         setIsLoading(true);
 
+        const accessToken = localStorageUtil.getItem('acessToken');
+
+        if (!accessToken) {
+            toast.error('Sessão expirada. Por favor, faça login novamente.');
+            localStorageUtil.clear();
+            setIsLoading(false);
+            setIsOpen(false);
+            router.push('/');
+            return;
+        }
+
         try {
-            const result = await deleteTicket(ticketID);
+            const result = await deleteTicket(ticketID, accessToken);
 
             if (!result.success) {
-                toast.error(result.message);
-                localStorageUtil.clear();
-                router.push('/');
-                setIsOpen(false);
-                return;
+
+                if(result.status === 401) {
+                    toast.error('Token inválido, faça login novamente.');
+                    localStorageUtil.clear();
+                    setIsOpen(false);
+                    setIsLoading(false);
+                    router.push('/');
+                    return;
+                }
+
+                if(result.status === 400) {
+                    toast.error('ID inválido');
+                    setIsOpen(false);
+                    setIsLoading(false);
+                    return;
+                }
+
+                if(result.status === 404) {
+                    toast.error('Ingresso não encontrado');
+                    setIsOpen(false);
+                    setIsLoading(false);
+                    return;
+                }
+
+                if(result.status === 500) {
+                    toast.error('Erro ao deletar ingresso, tente novamente mais tarde');
+                    setIsOpen(false);
+                    setIsLoading(false);
+                    return;
+                }
             }
 
             toast.success(result.message);
@@ -52,9 +88,11 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
 
         } catch (error) {
             console.log('Erro ao deletar ingresso:', error);
-            
+
             toast.error('Erro ao deletar ingresso, por favor, faça login novamente.');
             localStorageUtil.clear();
+            setIsLoading(false);
+            setIsOpen(false);
             router.push('/');
         } finally {
             setIsLoading(false);
