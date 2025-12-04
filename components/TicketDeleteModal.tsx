@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
     Dialog,
@@ -12,9 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { deleteTicket } from "@/app/actions/tickets_";
+import { localStorageUtil } from "@/lib/localStorage_";
 
 interface Props {
     ticketID: string;
@@ -30,66 +31,31 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
         setIsLoading(true);
 
         try {
-            const accessToken = localStorageUtil.getItem('acessToken');
+            const result = await deleteTicket(ticketID);
 
-            if (!accessToken) {
-                toast.error('Sessão expirada. Por favor, faça login novamente.');
+            if (!result.success) {
+                toast.error(result.message);
                 localStorageUtil.clear();
-                setIsLoading(false);
-                setIsOpen(false);
                 router.push('/');
-                return;
-            }
-
-            const response = await fetch(`/api/tickets/${ticketID}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const returnedResponse = await response.json();
-
-            if (returnedResponse.status === 400) {
-                toast.error('ID inválido');
-                setIsLoading(false);
                 setIsOpen(false);
                 return;
             }
 
-            if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente.');
-                localStorageUtil.clear();
-                setIsLoading(false);
-                setIsOpen(false);
-                router.push('/');
-                return;
+            toast.success(result.message);
+            setIsOpen(false);
+
+            if (onUpdatePage) {
+                onUpdatePage();
+            } else {
+                router.refresh();
             }
 
-            if (returnedResponse.status === 404) {
-                toast.error('Ingresso não encontrado');
-                setIsLoading(false);
-                setIsOpen(false);
-                return;
-            }
-
-            if (returnedResponse.status === 500) {
-                toast.error('Erro ao deletar ingresso, tente novamente mais tarde');
-                setIsLoading(false);
-                setIsOpen(false);
-                return;
-            }
-
-            if (returnedResponse.status === 200) {
-                toast.success('Ingresso excluído com sucesso !!!');
-                setIsLoading(false);
-                setIsOpen(false);
-                if (onUpdatePage) onUpdatePage()
-            }
         } catch (error) {
-            console.error('Erro ao deletar ingresso:', error);
-            toast.error('Erro ao deletar ingresso, tente novamente mais tarde')
+            console.log('Erro ao deletar ingresso:', error);
+            
+            toast.error('Erro ao deletar ingresso, por favor, faça login novamente.');
+            localStorageUtil.clear();
+            router.push('/');
         } finally {
             setIsLoading(false);
         }
