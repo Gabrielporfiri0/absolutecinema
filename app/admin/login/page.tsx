@@ -1,5 +1,6 @@
 'use client'
 
+import { loginUser } from "@/app/actions/login_"
 import { localStorageUtil } from "@/lib/localStorage_"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -23,51 +24,50 @@ export default function Page() {
         }
 
         try {
-            const response = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: userName,
-                    password: userPassword
-                })
-            })
+            const result = await loginUser(userName, userPassword);
 
-            const returnedResponse = await response.json()
+            if (!result.success) {
+                if(result.status === 400) {
+                    toast.error('Por favor, forneça todos os dados')
+                    setIsProcessingLogin(false)
+                    return
+                }
 
-            if (returnedResponse.status === 200) {
+                if(result.status === 404) {
+                    toast.error('Usuário não encontrado')
+                    setIsProcessingLogin(false)
+                    return
+                }
+
+                if(result.status === 401) {
+                    toast.error('Credenciais inválidas')
+                    setIsProcessingLogin(false)
+                    return
+                }
+
+                if(result.status === 500) {
+                    toast.error('Erro ao realizar login, tente novamente mais tarde')
+                    setIsProcessingLogin(false)
+                    return
+                }
+
+
+            }
+
+            if (result.status === 200) {
                 
-                const tokenIsSet = localStorageUtil.setItem('acessToken', returnedResponse.token)
+                const tokenIsSet = localStorageUtil.setItem('acessToken', result.token || '')
                 
                 if(tokenIsSet){
                     toast.success('Login realizado com sucesso !!!')
                     setUserName('')
                     setUserPassword('')
                     setIsProcessingLogin(false)
-    
+
                     router.push('./dashboard')
                 }
 
                 setIsProcessingLogin(false)
-            }
-            
-            if (returnedResponse.status === 404) {
-                toast.error('Usuário não encontrado')
-                setIsProcessingLogin(false)
-                return
-            }
-            
-            if (returnedResponse.status === 401) {
-                toast.error('Senha inválida')
-                setIsProcessingLogin(false)
-                return
-            }
-
-            if (returnedResponse.status === 500) {
-                toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
-                setIsProcessingLogin(false)
-                return
             }
         } catch (error) {
             console.log('Erro ao tentar logar admin: ', error)
