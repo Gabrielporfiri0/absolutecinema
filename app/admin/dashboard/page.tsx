@@ -11,10 +11,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff } from 'lucide-react';
+import HandleMovieInformations from "@/components/HandleMovieInformations";
 
 export default function Page() {
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState<'reservas' | 'admins'>('reservas'); // Controla qual aba está visível
+    const [activeTab, setActiveTab] = useState<'reservas' | 'admins' | 'movie'>('reservas'); // Controla qual aba está visível
 
     const [loading, setLoading] = useState(true);
     const [newAdminBeingRegistered, setNewAdminBeingRegistered] = useState(false);
@@ -261,11 +262,19 @@ export default function Page() {
                     >
                         Gerenciar Reservas
                     </button>
+
                     <button
                         onClick={() => setActiveTab('admins')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'admins' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
                     >
                         Gerenciar Administradores
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('movie')}
+                        className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'movie' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        Gerenciar Filme em cartaz
                     </button>
                 </div>
 
@@ -376,7 +385,7 @@ export default function Page() {
                                             onClick={togglePasswordVisibility}
                                             className="hover:cursor-pointer"
                                         >
-                                            {showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
                                 </div>
@@ -389,6 +398,12 @@ export default function Page() {
                                 </button>
                             </form>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'movie' && (
+                    <div>
+                        <HandleMovieInformations />
                     </div>
                 )}
             </div>

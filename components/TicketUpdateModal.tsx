@@ -123,7 +123,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             const returnedResponse = await response.json()
 
             if (returnedResponse.status === 400) {
-                toast.error(`ID inválido, ou o assento ${formData.seat} já foi reservado, ou o CPF: ${formData.cpf} já foi registrado em 4 ingresso. Tente novamente.`)
+                toast.error(`ID inválido, ou o assento ${formData.seat} já foi reservado, ou o CPF: ${formData.cpf} já foi registrado em 4 ingressos. Tente novamente.`)
                 setIsLoading(false)
             }
 
@@ -141,14 +141,14 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             if (returnedResponse.status === 500) toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
 
             if (returnedResponse.status === 200) {
-                toast.success('Ingresso atualizado com sucesso !!!');
+                toast.success('Ingresso atualizado com sucesso!!!');
                 setIsOpen(false)
                 setIsLoading(false)
 
                 if (onUpdatePage) onUpdatePage()
             }
         } catch (error) {
-            console.error('Erro ao atualizar ingresso:', error);
+            console.log('Erro ao atualizar ingresso:', error);
             toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
         } finally {
             setIsLoading(false);

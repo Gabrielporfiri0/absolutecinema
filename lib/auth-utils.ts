@@ -12,5 +12,4 @@ export async function validateAuth(request: NextRequest) {
     if (decoded_.valid) return { ...decoded_, error: null, status: 200 }
     
     return { ...decoded_, error: 'Token inválido', status: 401 }
-
 }
