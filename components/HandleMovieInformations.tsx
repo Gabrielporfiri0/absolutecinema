@@ -17,6 +17,27 @@ export default function handleMovieInformation() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [initialMovieData, setInitialMovieData] = useState<Movies>()
 
+    const router = useRouter()
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, dirtyFields, isSubmitting, isDirty },
+        setValue,
+        trigger,
+        reset,
+        // watch
+    } = useForm<MovieFormData>({
+        resolver: zodResolver(MovieSchema),
+        defaultValues: {
+            title: '',
+            movie_genre: '',
+            synopsis: '',
+            duration: '',
+            photo: ''
+        }
+    })
+
     useEffect(() => {
         const fetchMovieData = async () => {
             try {
@@ -28,11 +49,11 @@ export default function handleMovieInformation() {
                     // setValue('photo', movieData.photo)
 
                     reset({
-                        title: movieData.title,
-                        movie_genre: movieData.movie_genre,
-                        synopsis: movieData.synopsis,
-                        duration: movieData.duration,
-                        photo: movieData.photo,
+                        title: movieData.title || '',
+                        movie_genre: movieData.movie_genre || '',
+                        synopsis: movieData.synopsis || '',
+                        duration: movieData.duration || '',
+                        photo: movieData.photo || '',
                     })
                 }
             } catch (error) {
@@ -56,27 +77,6 @@ export default function handleMovieInformation() {
 
         fetchMovieData();
     }, []);
-
-    const router = useRouter()
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, dirtyFields },
-        setValue,
-        trigger,
-        reset,
-        // watch
-    } = useForm<MovieFormData>({
-        resolver: zodResolver(MovieSchema),
-        defaultValues: {
-            title: '',
-            movie_genre: '',
-            synopsis: '',
-            duration: '',
-            photo: ''
-        }
-    })
 
     // const photoFile = watch('photo')
 
@@ -133,7 +133,12 @@ export default function handleMovieInformation() {
     }
 
     const onSubmit = async (data: MovieFormData) => {
-        if (!data.photo || !selectedFile) {
+        // if (!data.photo || !selectedFile) {
+        //     toast.error("Por favor, selecione uma imagem");
+        //     return;
+        // }
+
+        if (!selectedFile && !initialMovieData?.photo) {
             toast.error("Por favor, selecione uma imagem");
             return;
         }
@@ -149,6 +154,9 @@ export default function handleMovieInformation() {
                         ...data,
                         photo: initialMovieData.photo,
                     }, initialMovieData.createdAt, initialMovieData.updatedAt)
+
+                    console.log('Resposta da atualização do filme: ', response)
+
                     if (response.status === 200) toast.success('Dados do filme atualizados com sucesso!!!')
                 } catch (error) {
                     if (isAxiosError(error) && error.response) {
@@ -178,6 +186,12 @@ export default function handleMovieInformation() {
                 }
                 return
             } else {
+
+                if (!selectedFile) {
+                    toast.error("Por favor, selecione uma imagem");
+                    return;
+                }
+
                 try {
                     let oldImageUrl = initialMovieData.photo
 
@@ -189,6 +203,8 @@ export default function handleMovieInformation() {
                             ...data,
                             photo: uploadedUrl,
                         }, initialMovieData.createdAt, initialMovieData.updatedAt)
+
+                        console.log('Resposta da atualização do filme: ', response)
 
                         if (response.status === 200) toast.success('Dados do filme atualizados com sucesso!!!')
                     } else {
@@ -225,6 +241,11 @@ export default function handleMovieInformation() {
         else {
             // Lógica para criar um novo filme
 
+            if (!selectedFile) {
+                toast.error("Por favor, selecione uma imagem");
+                return;
+            }
+
             try {
                 let imageUrl = selectedFile
 
@@ -234,6 +255,8 @@ export default function handleMovieInformation() {
                     ...data,
                     photo: uploadedUrl
                 })
+
+                console.log('Resposta da criação do filme: ', response)
 
                 if (response.status === 201) toast.success('Dados do filme cadastrados com sucesso!!!')
             } catch (error) {
@@ -270,6 +293,7 @@ export default function handleMovieInformation() {
                     <Input
                         type="text"
                         {...register('title')}
+                        disabled={isSubmitting}
                     />
 
                     {errors.title && (
@@ -284,6 +308,7 @@ export default function handleMovieInformation() {
                     <Input
                         type="text"
                         {...register('movie_genre')}
+                        disabled={isSubmitting}
                     />
 
                     {errors.movie_genre && (
@@ -298,6 +323,7 @@ export default function handleMovieInformation() {
                 <Label htmlFor="string">Sinopse</Label>
                 <Textarea
                     {...register('synopsis')}
+                    disabled={isSubmitting}
                 />
 
                 {errors.synopsis && (
@@ -311,6 +337,7 @@ export default function handleMovieInformation() {
                     <Input
                         type="time"
                         {...register('duration')}
+                        disabled={isSubmitting}
                     />
 
                     {errors.duration && (
@@ -329,13 +356,32 @@ export default function handleMovieInformation() {
                         accept="image/*"
                         onChange={handleImageFileChange}
                         className="hover:cursor-pointer"
+                        disabled={isSubmitting}
                     />
 
-                    {selectedFile && (
+                    {/* {selectedFile && (
                         <div className="mt-2">
                             <p className="text-sm">Prévia: {selectedFile.name}</p>
                             <img
                                 src={URL.createObjectURL(selectedFile)}
+                                alt="Preview"
+                                className="mt-2 max-h-40 rounded"
+                            />
+                        </div>
+                    )} */}
+
+                    {(selectedFile || initialMovieData?.photo) && (
+                        <div className="mt-2">
+                            <p className="text-sm">
+                                Prévia:
+                            </p>
+
+                            <img
+                                src={
+                                    selectedFile
+                                        ? URL.createObjectURL(selectedFile)
+                                        : initialMovieData?.photo
+                                }
                                 alt="Preview"
                                 className="mt-2 max-h-40 rounded"
                             />
@@ -350,11 +396,19 @@ export default function handleMovieInformation() {
                 </div>
             </div>
 
-            <Button>
+            <Button
+                type="button"
+                disabled={isSubmitting}
+                className="hover:cursor-pointer"
+            >
                 Cancelar
             </Button>
 
-            <Button type="submit">
+            <Button
+                type="submit"
+                disabled={isSubmitting || !isDirty}
+                className="hover:cursor-pointer"
+            >
                 {initialMovieData ? 'Atualizar' : 'Salvar'}
             </Button>
         </form>

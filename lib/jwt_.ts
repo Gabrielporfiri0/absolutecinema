@@ -16,7 +16,7 @@ export async function generateToken(payload: any){
 
 export async function verifyToken(token__: string){
     try {
-        console.log('TOKEN RECEBIDO NA VERIFICAÇÃO: ', token__)
+        // console.log('TOKEN RECEBIDO NA VERIFICAÇÃO: ', token__)
         const { payload } = await jwtVerify(token__, secretKey);
         return {
             valid: true,

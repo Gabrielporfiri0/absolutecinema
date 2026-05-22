@@ -141,7 +141,7 @@ export default function SeatPicker() {
       setCpf('');
     } catch (error) {
       console.error('Erro ao enviar reserva:', error);
-      toast.error('Erro ao realizar reserva(s), tente novamente mais tarde.');
+      toast.error('Erro ao realizar reserva(s), tente novamente mais tarde');
     }
   };
 

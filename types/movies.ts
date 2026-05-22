@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb"
 import { z } from "zod"
 
 export type Movies = {
-    _id: ObjectId,
+    _id: ObjectId | string,
     title: string,
     movie_genre: string,
     synopsis: string

@@ -59,6 +59,8 @@ export default function Page() {
 
             const returnedResponse = await response.json()
 
+            console.log('Resposta da API de busca de reservas No DASHBOARD: ', returnedResponse)
+
             if (returnedResponse.status === 401) {
                 toast.error('Token inválido, faça login novamente');
                 router.push('/')
@@ -109,11 +111,31 @@ export default function Page() {
         }
     }
 
+    // useEffect(() => {
+    //     setLoading(true);
+    //     getAllReserves()
+    //     getAllAdmins()
+    //     setLoading(false);
+    // }, []);
+
     useEffect(() => {
-        setLoading(true);
-        getAllReserves()
-        getAllAdmins()
-        setLoading(false);
+        async function loadData() {
+            try {
+                setLoading(true);
+
+                await Promise.all([
+                    getAllReserves(),
+                    getAllAdmins()
+                ]);
+            } catch (error) {
+                console.log('Erro ao carregar dashboard:', error);
+                toast.error('Erro ao carregar dados');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadData();
     }, []);
 
     const handleLogout = async () => {

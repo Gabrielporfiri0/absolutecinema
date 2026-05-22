@@ -34,7 +34,7 @@ export const movieService = {
             },
         })
 
-        return response.data
+        return response
     },
 
     get: async () => {
@@ -44,13 +44,13 @@ export const movieService = {
                 ...authorizationHeader
             },
         })
-        return response.data
+        return response
     },
 
     update: async (id: string, data: MovieFormData, created_at: string, updated_at: string) => {
         const authorizationHeader = getAuthHeaders()
         const payload: Movies = {
-            _id: ObjectId.createFromHexString(id),
+            _id: '',
             title: data.title,
             movie_genre: data.movie_genre,
             synopsis: data.synopsis,
@@ -80,6 +80,6 @@ export const movieService = {
                 ...authorizationHeader
             },
         })
-        return response.data
+        return response
     }
 }
