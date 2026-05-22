@@ -13,24 +13,24 @@ export async function POST(request: NextRequest) {
 
         try {
             data = await request.json()
-            if (!data.name || !data.password) return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            if (!data.name || !data.password) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         } catch (error) {
-            return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         }
 
         const adminsCollection = await getAdminsCollection()
 
         const adminExists = await adminsCollection.findOne({ name: data.name })
 
-        if (!adminExists) return NextResponse.json({ error: 'Usuário não encontrado', status: 404 })
+        if (!adminExists) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
 
         const isValidPassword = await bcrypt.compare(data.password, adminExists.password)
 
-        if (!isValidPassword) return NextResponse.json({ error: 'Credenciais inválidas', status: 401 })
+        if (!isValidPassword) return NextResponse.json({ error: 'Credenciais inválidas' }, { status: 401 })
 
         const token_ = await generateToken({ userId: String(adminExists._id), userName: adminExists.name, role: 'admin' })
 
-        const response =  NextResponse.json({ message: 'Login realizado com sucesso', token: token_, status: 200 })
+        const response =  NextResponse.json({ message: 'Login realizado com sucesso', token: token_ }, { status: 200 })
         
         response.cookies.set({
             name: 'accessToken',
@@ -45,6 +45,6 @@ export async function POST(request: NextRequest) {
         return response
     } catch (error) {
         console.log('Erro ao realizar login do admin: ', error)
-        return NextResponse.json({ error: 'Erro ao realizar login do admin', status: 500 })
+        return NextResponse.json({ error: 'Erro ao realizar login do admin' }, { status: 500 })
     }
 }

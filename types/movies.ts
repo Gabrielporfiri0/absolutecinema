@@ -1,6 +1,8 @@
+import { ObjectId } from "mongodb"
 import { z } from "zod"
 
 export type Movies = {
+    _id: ObjectId,
     title: string,
     movie_genre: string,
     synopsis: string
@@ -35,21 +37,24 @@ export const MovieSchema = z.object({
         .transform(value => value.trim())
         .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços' }),
     duration: z.string().min(4, { message: 'Precisa estar no formato: HH:MM' }).max(5, { message: 'Precisa estar no formato: HH:MM' }),
-    photo: z.instanceof(File, { message: 'O arquivo não é uma instância de file.' })
-        .refine(
-            (value) => {
-                if (value instanceof File) {
-                    const allowedTypes = ["image/jpeg", "image/png"];
-                    const isAllowedType = allowedTypes.includes(value.type);
-                    const isUnderLimit = value.size <= 10 * 1024 * 1024;
-                    return isAllowedType && isUnderLimit;
-                }
-                return true;
-            },
-            {
-                message: "Envie uma imagem válida (PNG/JPG, até 10MB)",
-            }
-        ),
+    // photo: z.union([
+    //     z.url({ message: 'A foto deve ser uma URL válida' }),
+    //     z.instanceof(File, { message: 'O arquivo não é uma instância de file.' })
+    // ]) .refine(
+    //         (value) => {
+    //             if (value instanceof File) {
+    //                 const allowedTypes = ["image/jpeg", "image/png"];
+    //                 const isAllowedType = allowedTypes.includes(value.type);
+    //                 const isUnderLimit = value.size <= 10 * 1024 * 1024;
+    //                 return isAllowedType && isUnderLimit;
+    //             }
+    //             return true;
+    //         },
+    //         {
+    //             message: "Envie uma imagem válida (PNG/JPG, até 10MB)",
+    //         }
+    //     ),
+    photo: z.url({ message: 'A foto deve ser uma URL válida' })
 })
 
 export type MovieFormData = z.infer<typeof MovieSchema>

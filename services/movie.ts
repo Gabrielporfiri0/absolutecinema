@@ -1,6 +1,7 @@
 import { localStorageUtil } from "@/lib/localStorage_";
-import { MovieDataToSent } from "@/types/movies";
+import { MovieDataToSent, MovieFormData, Movies } from "@/types/movies";
 import axios from "axios";
+import { ObjectId } from "mongodb";
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
 
@@ -16,12 +17,10 @@ const getAuthHeaders = () => {
 }
 
 export const movieService = {
-    create: async (data: MovieDataToSent, token: string) => {
+    create: async (data: MovieFormData) => {
         const authorizationHeader = getAuthHeaders()
-        // // const formData = new FormData();
-        // const dataToBeSent = {
-        //     title: data.title
-        // }
+        // const formData = new FormData();
+
         // formData.append('title', data.title);
         // formData.append('movie_genre', data.movie_genre);
         // formData.append('synopsis', data.synopsis);
@@ -35,6 +34,52 @@ export const movieService = {
             },
         })
 
+        return response.data
+    },
+
+    get: async () => {
+        const authorizationHeader = getAuthHeaders()
+        const response = await axios.get('/api/movies', {
+            headers: {
+                ...authorizationHeader
+            },
+        })
+        return response.data
+    },
+
+    update: async (id: string, data: MovieFormData, created_at: string, updated_at: string) => {
+        const authorizationHeader = getAuthHeaders()
+        const payload: Movies = {
+            _id: ObjectId.createFromHexString(id),
+            title: data.title,
+            movie_genre: data.movie_genre,
+            synopsis: data.synopsis,
+            duration: data.duration,
+            photo: data.photo,
+            createdAt: created_at,
+            updatedAt: updated_at
+        }
+
+        // const formData = new FormData();
+
+        // formData.append('_id', id);
+        // formData.append('title', data.title);
+        // formData.append('movie_genre', data.movie_genre);
+        // formData.append('synopsis', data.synopsis);
+        // formData.append('duration', data.duration);
+        // formData.append('created_at', created_at);
+        // formData.append('updated_at', updated_at);
+        
+        // if (data.photo instanceof File) {
+        //     formData.append('photo', data.photo);
+        // }
+
+        const response = await axios.put(`/api/movies/${id}`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...authorizationHeader
+            },
+        })
         return response.data
     }
 }

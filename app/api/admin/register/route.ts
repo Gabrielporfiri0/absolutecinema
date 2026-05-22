@@ -13,20 +13,20 @@ export async function POST(request: NextRequest){
 
         try {
             data = await request.json()
-            if (!data.name || !data.password) return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            if (!data.name || !data.password) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         } catch (error) {
-            return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         }
         
         const aValidTokenWasSent = await validateAuth(request)
 
-        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })  
+        if(aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido' }, { status: 401 })  
 
         const adminCollection = await getAdminsCollection()
 
         const userNameAlreadyExists = await adminCollection.findOne({ name: data.name})
 
-        if(userNameAlreadyExists) return NextResponse.json({ error: 'O nome de usuário já existe', status: 400 })
+        if(userNameAlreadyExists) return NextResponse.json({ error: 'O nome de usuário já existe' }, { status: 400 })
         
         const hashedPassword = await bcrypt.hash(data.password, 10)
 
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest){
             updatedAt: Date()
         })
 
-        return NextResponse.json({ message: 'Novo admin cadastrado com sucesso', id: response.insertedId, status: 201 })
+        return NextResponse.json({ message: 'Novo admin cadastrado com sucesso', id: response.insertedId }, { status: 201 })
     }catch(error){
         console.log('Erro ao registrar novo admin !!!')
-        return NextResponse.json({ error: 'Erro ao tentar registrar novo admin', status: 500 })
+        return NextResponse.json({ error: 'Erro ao tentar registrar novo admin' }, { status: 500 })
     }
 }

@@ -12,20 +12,20 @@ export async function POST(request: NextRequest) {
 
         try {
             data = await request.json()
-            if (!data.name || !data.cpf || !Number(data.seat)) return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            if (!data.name || !data.cpf || !Number(data.seat)) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         } catch (error) {
-            return NextResponse.json({ error: 'Por favor, forneça todos os dados', status: 400 })
+            return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         }
 
         const collection = await getTicketsCollection()
 
         const sentSeatAlreadyRegistered = await collection.findOne({ seat: Number(data.seat) })
 
-        if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado', status: 400 })
+        if (sentSeatAlreadyRegistered) return NextResponse.json({ error: 'O Assento já foi reservado' }, { status: 400 })
 
         const numberOfTicketsWithThisCPF = await collection.countDocuments({ cpf: data.cpf })
 
-        if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets', status: 400 })
+        if (numberOfTicketsWithThisCPF === 4) return NextResponse.json({ error: 'CPF já registrado em 4 tickets' }, { status: 400 })
 
         const response = await collection.insertOne({
             name: data.name,
@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date()
         })
 
-        return NextResponse.json({ message: "Ingresso cadastrado com sucesso", id: response.insertedId, status: 201 })
+        return NextResponse.json({ message: "Ingresso cadastrado com sucesso", id: response.insertedId }, { status: 201 })
     } catch (error) {
         console.log('Erro ao realizar POST do ingresso: ', error)
-        return NextResponse.json({ error: 'Erro ao adicionar ingresso', status: 500 })
+        return NextResponse.json({ error: 'Erro ao adicionar ingresso' }, { status: 500 })
     }
 }

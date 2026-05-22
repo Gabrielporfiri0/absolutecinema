@@ -23,10 +23,9 @@ function extractPublicId(url: string): string | null {
 
 export async function POST(request: NextRequest) {
     try{
-        console.log('POST, upload image: ', request)
         const aValidTokenWasSent = await validateAuth(request)
     
-        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     
         const timestamp = Math.floor(Date.now() / 1000);
     
@@ -37,18 +36,16 @@ export async function POST(request: NextRequest) {
     
         return NextResponse.json({
             message: 'ok',
-            status: 201,
             timestamp,
             signature,
             apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
             cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
             folder: "movies"
-        });
+        }, { status: 201 });
     } catch(error){
         return NextResponse.json({
             error: 'Erro interno no servidor ao realizar POST para upload de imagem',
-            status: 500
-        })
+        }, { status: 500 })
     }
 }
 
@@ -56,7 +53,7 @@ export async function DELETE(request: NextRequest) {
     try {
         const aValidTokenWasSent = await validateAuth(request)
 
-        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
 
         const { imageUrl } = await request.json();
 
@@ -70,7 +67,7 @@ export async function DELETE(request: NextRequest) {
 
         await cloudinary.uploader.destroy(publicId);
 
-        return NextResponse.json({ message: 'ok', status: 204 });
+        return NextResponse.json({ message: 'ok' }, { status: 204 });
 
     } catch (err) {
         return NextResponse.json(

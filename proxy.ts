@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./lib/jwt_";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const tokenExists = request.cookies.get('accessToken')?.value
 
     if (!tokenExists) return NextResponse.redirect(new URL('/admin/login', request.url))

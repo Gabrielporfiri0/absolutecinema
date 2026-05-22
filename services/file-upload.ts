@@ -14,7 +14,7 @@ const getAuthHeaders = () => {
 }
 
 export const fileUploadService = {
-  uploadImage: async (file: File, token: string): Promise<string> => {
+  uploadImage: async (file: File): Promise<string> => {
     const authorizationHeader = getAuthHeaders()
     const sig = await axios.post("/api/fileUpload", {}, { 
       headers: { 
@@ -48,14 +48,17 @@ export const fileUploadService = {
     return optimizedUrl;
   },
 
-  deleteImage: async (imageUrl: string, token_: string) => {
-    // const authorizationHeader = getAuthHeaders()
-    await axios.delete("/api/fileUpload", {
+  deleteImage: async (imageUrl: string) => {
+    const authorizationHeader = getAuthHeaders()
+    
+    const response = await axios.delete("/api/fileUpload", {
       data: { imageUrl },
       headers: {
         'Content-Type': 'application/json',
-        // ...authorizationHeader
+        'Authorization': `Bearer ${authorizationHeader}`
       }
     });
+
+    return response
   }
 };
