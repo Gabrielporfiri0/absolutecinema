@@ -25,6 +25,8 @@ export async function PUT(
             movie_genre: '',
             synopsis: '',
             duration: '',
+            session_date: '',
+            session_time: '',
             photo: '',
             createdAt: '',
             updatedAt: ''
@@ -32,8 +34,7 @@ export async function PUT(
 
         try {
             data = await request.json()
-            if (!data.title || !data.movie_genre || !data.synopsis || !data.duration || !data.photo || !data.createdAt || !data.updatedAt)
-                return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
+            if (!data.title || !data.movie_genre || !data.synopsis || !data.duration || !data.session_date || !data.session_time || !data.photo || !data.createdAt) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         } catch (error) {
             return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         }
@@ -52,6 +53,8 @@ export async function PUT(
                     movie_genre: data.movie_genre,
                     synopsis: data.synopsis,
                     duration: data.duration,
+                    session_date: data.session_date,
+                    session_time: data.session_time,
                     photo: data.photo,
                     createdAt: data.createdAt,
                     updatedAt: new Date()

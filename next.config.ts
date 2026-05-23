@@ -4,10 +4,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'ingresso-a.akamaihd.net',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
     ],
   },

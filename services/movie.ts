@@ -1,5 +1,11 @@
 import { localStorageUtil } from "@/lib/localStorage_";
-import { GetMoviesSuccessResponse, MovieFormData, Movies, PostMoviesSuccessResponse, PutMoviesSuccessResponse } from "@/types/movies";
+import { 
+    GetMoviesSuccessResponse, 
+    MovieFormData, 
+    Movies, 
+    PostMoviesSuccessResponse, 
+    PutMoviesSuccessResponse 
+} from "@/types/movies";
 import axios from "axios";
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
@@ -29,12 +35,7 @@ export const movieService = {
     },
 
     get: async () => {
-        const authorizationHeader = getAuthHeaders()
-        const response = await axios.get<GetMoviesSuccessResponse>('/api/movies', {
-            headers: {
-                ...authorizationHeader
-            },
-        })
+        const response = await axios.get<GetMoviesSuccessResponse>('/api/movies')
         return response
     },
 
@@ -46,6 +47,8 @@ export const movieService = {
             movie_genre: data.movie_genre,
             synopsis: data.synopsis,
             duration: data.duration,
+            session_date: data.session_date,
+            session_time: data.session_time,
             photo: data.photo,
             createdAt: created_at,
             updatedAt: updated_at

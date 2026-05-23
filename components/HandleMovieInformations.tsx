@@ -55,6 +55,8 @@ export default function HandleMovieInformation() {
                         movie_genre: movie.movie_genre,
                         synopsis: movie.synopsis,
                         duration: movie.duration,
+                        session_date: movie.session_date,
+                        session_time: movie.session_time,
                         photo: movie.photo,
                     });
                 } else if (response.status === 200 && response.data.movies__.length === 0) {
@@ -312,6 +314,50 @@ export default function HandleMovieInformation() {
                 {errors.duration && (
                     <span className="text-rose-400 text-xs sm:text-sm block pl-1">
                         {errors.duration.message}
+                    </span>
+                )}
+            </div>
+            
+            <div className="space-y-1.5">
+                <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
+                    Data da sessão (DD/MM/AAAA) <span className="text-rose-400">*</span>
+                </label>
+
+                <Input
+                    id="session_date"
+                    type="date"
+                    {...register("session_date")}
+                    disabled={isSubmitting}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                />
+
+                {errors.session_date && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.session_date.message}
+                    </span>
+                )}
+            </div>
+
+            <div className="space-y-1.5">
+                <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
+                    Horário da sessão (HH:MM) <span className="text-rose-400">*</span>
+                </label>
+
+                <Input
+                    id="session_time"
+                    type="time"
+                    {...register("session_time")}
+                    disabled={isSubmitting}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                />
+
+                {errors.session_time && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.session_time.message}
                     </span>
                 )}
             </div>

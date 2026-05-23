@@ -21,6 +21,8 @@ export type Movies = {
     movie_genre: string,
     synopsis: string
     duration: string,
+    session_date: string,
+    session_time: string,
     photo: string,
     createdAt: string,
     updatedAt: string,
@@ -37,7 +39,7 @@ export type MovieDataToSent = {
 export const MovieSchema = z.object({
     title: z.string()
         .min(1, { message: 'Ao menos 1 caractere' })
-        .max(30, { message: 'No máximo 30 caracteres' })
+        .max(50, { message: 'No máximo 50 caracteres' })
         .transform(value => value.trim())
         .refine(value => value.length > 0 , { message: 'Campo não pode ser vazio após remover espaços' }),
     movie_genre: z.string()
@@ -51,7 +53,10 @@ export const MovieSchema = z.object({
         .transform(value => value.trim())
         .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços' }),
     duration: z.string().min(4, { message: 'Precisa estar no formato: HH:MM' }).max(5, { message: 'Precisa estar no formato: HH:MM' }),
-    photo: z.string().min(1, { message: 'A foto é obrigatória' })
+    session_date: z.string().min(10, { message: 'Precisa estar no formato: DD/MM/AAAA' }).max(10, { message: 'Precisa estar no formato: DD/MM/AAAA' }),
+    session_time: z.string().min(4, { message: 'Precisa estar no formato: HH:MM' }).max(5, { message: 'Precisa estar no formato: HH:MM' }),
+    photo: z.string().min(1, { message: 'A foto é obrigatória' }),
+    
 })
 
 export type MovieFormData = z.infer<typeof MovieSchema>

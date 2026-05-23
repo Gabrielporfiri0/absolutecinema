@@ -1,4 +1,4 @@
-import { MovieDataToSent, MovieFormData } from "@/types/movies"
+import { MovieFormData } from "@/types/movies"
 import { NextRequest, NextResponse } from "next/server"
 import { getMoviesCollection } from "./mongodb"
 import { validateAuth } from "@/lib/auth-utils"
@@ -10,12 +10,14 @@ export async function POST(request: NextRequest) {
             movie_genre: '',
             synopsis: '',
             duration: '',
+            session_date: '',
+            session_time: '',
             photo: ''
         }
 
         try {
             data = await request.json()
-            if (!data.title || !data.movie_genre || !data.synopsis || !data.duration || !data.photo) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
+            if (!data.title || !data.movie_genre || !data.synopsis || !data.duration || !data.session_date || !data.session_time || !data.photo) return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         } catch (error) {
             return NextResponse.json({ error: 'Por favor, forneça todos os dados' }, { status: 400 })
         }
@@ -35,6 +37,8 @@ export async function POST(request: NextRequest) {
             movie_genre: data.movie_genre,
             synopsis: data.synopsis,
             duration: data.duration,
+            session_date: data.session_date,
+            session_time: data.session_time,
             photo: data.photo,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -49,10 +53,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
-        const aValidTokenWasSent = await validateAuth(request)
-
-        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
-
         const collection = await getMoviesCollection()
         const movies = await collection.find().toArray()
         return NextResponse.json({ message: 'Filmes encontrados com sucesso', movies__: movies }, { status: 200 })
