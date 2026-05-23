@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useForm } from "react-hook-form";
 import { MovieFormData, Movies, MovieSchema } from "@/types/movies";
@@ -13,404 +12,373 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { validateImage } from "@/utils/imageUtils";
 
-export default function handleMovieInformation() {
+export default function HandleMovieInformation() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [initialMovieData, setInitialMovieData] = useState<Movies>()
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [initialMovieData, setInitialMovieData] = useState<Movies>();
 
-    const router = useRouter()
+    const router = useRouter();
 
     const {
         register,
         handleSubmit,
-        formState: { errors, dirtyFields, isSubmitting, isDirty },
+        formState: {
+            errors,
+            isSubmitting,
+            isDirty,
+        },
         setValue,
-        trigger,
         reset,
-        // watch
     } = useForm<MovieFormData>({
         resolver: zodResolver(MovieSchema),
         defaultValues: {
-            title: '',
-            movie_genre: '',
-            synopsis: '',
-            duration: '',
-            photo: ''
-        }
-    })
+            title: "",
+            movie_genre: "",
+            synopsis: "",
+            duration: "",
+            photo: "",
+        },
+    });
 
     useEffect(() => {
-        const fetchMovieData = async () => {
+        async function fetchMovieData() {
             try {
-                const response = await movieService.get()
+                const response = await movieService.get();
 
                 if (response.status === 200 && response.data.movies__.length > 0) {
-                    const movieData = response.data.movies__[0]
-                    setInitialMovieData(movieData)
-                    // setValue('photo', movieData.photo)
+                    const movie = response.data.movies__[0];
+
+                    setInitialMovieData(movie);
 
                     reset({
-                        title: movieData.title || '',
-                        movie_genre: movieData.movie_genre || '',
-                        synopsis: movieData.synopsis || '',
-                        duration: movieData.duration || '',
-                        photo: movieData.photo || '',
-                    })
+                        title: movie.title,
+                        movie_genre: movie.movie_genre,
+                        synopsis: movie.synopsis,
+                        duration: movie.duration,
+                        photo: movie.photo,
+                    });
+                } else if (response.status === 200 && response.data.movies__.length === 0) {
+                    toast.error("Nenhum filme cadastrado ainda, preencha os dados para criar o primeiro!");
+                } else {
+                    toast.error("Erro desconhecido ao buscar dados do filme cadastrado, tente novamente mais tarde!");
                 }
             } catch (error) {
-                if (isAxiosError(error) && error.response) {
-                    switch (error.response.status) {
-                        case 401:
-                            toast.error('Token inválido. Faça login novamente.')
-                            router.push('/')
-                            break
-                        case 500:
-                            toast.error('Erro interno no servidor ao buscar dados do filme!! Tente novamente mais tarde.')
-                            break
-                        default:
-                            toast.error('Erro desconhecido ao buscar dados do filme. Tente novamente mais tarde.')
-                    }
+                if (isAxiosError(error) && error.response?.status === 401) {
+                    toast.error("Erro, sessão expirada, faça login novamente!");
+                    localStorage.removeItem("acessToken");
+                    router.push("/");
                 } else {
-                    toast.error('Erro desconhecido ao buscar dados do filme. Tente novamente mais tarde.')
+                    toast.error("Erro desconhecido ao buscar dados do filme cadastrado, tente novamente mais tarde!");
                 }
             }
         }
 
         fetchMovieData();
-    }, []);
+    }, [reset, router]);
 
-    // const photoFile = watch('photo')
+    useEffect(() => {
+        if (!selectedFile) {
+            setPreviewUrl(null);
+            return;
+        }
 
-    // function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    //     const files = e.target.files;
+        const url = URL.createObjectURL(selectedFile);
 
-    //     if (files && files.length > 0) {
-    //         const file = files[0];
-    //         setValue('photo', file); // Define o valor como File
-    //         setSelectedFile(file);
-    //         trigger('photo'); // Dispara validação
-    //     }
-    // }
+        setPreviewUrl(url);
+
+        return () => {
+            URL.revokeObjectURL(url);
+        };
+    }, [selectedFile]);
 
     async function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
+
         if (!file) return;
 
         const error = await validateImage(file);
 
         if (error) {
             toast.error(error);
+
             e.target.value = "";
+
             return;
         }
 
         setSelectedFile(file);
-        setValue('photo', URL.createObjectURL(file)); // Define o valor como URL para pré-visualização
-        trigger('photo'); // Dispara validação
+
+        setValue("photo", URL.createObjectURL(file), {
+            shouldDirty: true,
+            shouldValidate: true,
+        });
     }
 
-    // // Função para limpar o arquivo
-    // const clearFile = () => {
-    //     setValue('photo', undefined);
-    //     setSelectedFile(null);
-    // }
-
-    const removeImageFromCloudinary = async (imageUrl: string) => {
+    async function removeImage(url: string) {
         try {
-            const response = await fileUploadService.deleteImage(imageUrl)
+            const response = await fileUploadService.deleteImage(url);
 
-            if (response.status === 200) {
-                toast.success('Imagem antiga removida com sucesso!')
-                return true
-            } else {
-                toast.error('Erro ao remover imagem antiga do filme. Tente novamente atualizar os dados do filme mais tarde.')
-                return false
-            }
-        } catch (error) {
-            console.log('Erro ao remover imagem antiga do Cloudinary: ', error)
-            toast.error('Erro ao remover imagem antiga do filme. Tente novamente atualizar os dados do filme mais tarde.')
-            return false
+            return response.status === 200;
+        } catch {
+            return false;
         }
     }
 
-    const onSubmit = async (data: MovieFormData) => {
-        // if (!data.photo || !selectedFile) {
-        //     toast.error("Por favor, selecione uma imagem");
-        //     return;
-        // }
+    async function uploadNewImage() {
+        if (!selectedFile) return null;
 
-        if (!selectedFile && !initialMovieData?.photo) {
-            toast.error("Por favor, selecione uma imagem");
-            return;
-        }
+        return fileUploadService.uploadImage(selectedFile);
+    }
 
-        if (initialMovieData) {
-            // Lógica para atualizar o filme existente
-
-            const hasChangedThePhoto = dirtyFields.photo
-
-            if (!hasChangedThePhoto) {
-                try {
-                    const response = await movieService.update(String(initialMovieData._id), {
-                        ...data,
-                        photo: initialMovieData.photo,
-                    }, initialMovieData.createdAt, initialMovieData.updatedAt)
-
-                    console.log('Resposta da atualização do filme: ', response)
-
-                    if (response.status === 200) toast.success('Dados do filme atualizados com sucesso!!!')
-                } catch (error) {
-                    if (isAxiosError(error) && error.response) {
-                        switch (error.response.status) {
-                            case 422:
-                                toast.error('ID do filme informado é inválido.')
-                                break
-                            case 404:
-                                toast.error('Filme não encontrado. Atualização dos dados do filme falhou.')
-                                break
-                            case 401:
-                                toast.error('Token inválido. Faça login novamente.')
-                                router.push('/')
-                                break
-                            case 400:
-                                toast.error('Por favor, forneça todos os dados necessários para atualizar o filme.')
-                                break
-                            case 500:
-                                toast.error('Erro interno no servidor ao atualizar dados do filme!! Tente novamente mais tarde.')
-                                break
-                            default:
-                                toast.error('Erro desconhecido ao atualizar dados do filme. Tente novamente mais tarde.')
-                        }
-                    } else {
-                        toast.error('Erro desconhecido ao atualizar dados do filme. Tente novamente mais tarde.')
-                    }
-                }
-                return
-            } else {
-
-                if (!selectedFile) {
-                    toast.error("Por favor, selecione uma imagem");
-                    return;
-                }
-
-                try {
-                    let oldImageUrl = initialMovieData.photo
-
-                    const isOldImageRemovedFromCloudinary = await removeImageFromCloudinary(String(oldImageUrl))
-
-                    if (isOldImageRemovedFromCloudinary) {
-                        const uploadedUrl = await fileUploadService.uploadImage(selectedFile)
-                        const response = await movieService.update(String(initialMovieData._id), {
-                            ...data,
-                            photo: uploadedUrl,
-                        }, initialMovieData.createdAt, initialMovieData.updatedAt)
-
-                        console.log('Resposta da atualização do filme: ', response)
-
-                        if (response.status === 200) toast.success('Dados do filme atualizados com sucesso!!!')
-                    } else {
-                        toast.error('Erro ao atualizar os dados do filme devido a um problema com a imagem. Tente novamente mais tarde.')
-                    }
-                } catch (error) {
-                    if (isAxiosError(error) && error.response) {
-                        switch (error.response.status) {
-                            case 422:
-                                toast.error('ID do filme informado é inválido.')
-                                break
-                            case 404:
-                                toast.error('Filme não encontrado. Atualização dos dados do filme falhou.')
-                                break
-                            case 401:
-                                toast.error('Token inválido. Faça login novamente.')
-                                router.push('/')
-                                break
-                            case 400:
-                                toast.error('Por favor, forneça todos os dados necessários para atualizar o filme.')
-                                break
-                            case 500:
-                                toast.error('Erro interno no servidor ao atualizar dados do filme!! Tente novamente mais tarde.')
-                                break
-                            default:
-                                toast.error('Erro desconhecido ao atualizar dados do filme. Tente novamente mais tarde.')
-                        }
-                    } else {
-                        toast.error('Erro desconhecido ao atualizar dados do filme. Tente novamente mais tarde.')
-                    }
-                }
-            }
-        }
-        else {
-            // Lógica para criar um novo filme
-
-            if (!selectedFile) {
-                toast.error("Por favor, selecione uma imagem");
+    async function onSubmit(data: MovieFormData) {
+        try {
+            if (!selectedFile && !initialMovieData?.photo) {
+                toast.error("Selecione uma imagem!");
                 return;
             }
 
-            try {
-                let imageUrl = selectedFile
+            let finalPhoto = initialMovieData?.photo ?? "";
 
-                const uploadedUrl = await fileUploadService.uploadImage(imageUrl)
+            const changedPhoto = !!selectedFile;
 
-                const response = await movieService.create({
-                    ...data,
-                    photo: uploadedUrl
-                })
+            if (changedPhoto) {
+                if (initialMovieData?.photo) {
+                    const removed = await removeImage(initialMovieData.photo);
 
-                console.log('Resposta da criação do filme: ', response)
-
-                if (response.status === 201) toast.success('Dados do filme cadastrados com sucesso!!!')
-            } catch (error) {
-                if (isAxiosError(error) && error.response) {
-                    switch (error.response.status) {
-                        case 422:
-                            toast.error('Já existe um filme cadastrado!!')
-                            break
-                        case 401:
-                            toast.error('Token inválido. Faça login novamente.')
-                            router.push('/')
-                            break
-                        case 400:
-                            toast.error('Por favor, forneça todos os dados necessários para cadastrar o filme.')
-                            break
-                        case 500:
-                            toast.error('Erro interno no servidor ao adicionar filme!! Tente novamente mais tarde.')
-                            break
-                        default:
-                            toast.error('Erro desconhecido ao criar filme. Tente novamente mais tarde.')
+                    if (!removed) {
+                        toast.error("Erro ao remover imagem antiga, tente novamente mais tarde.");
+                        return;
                     }
-                } else {
-                    toast.error('Erro desconhecido ao criar filme. Tente novamente mais tarde.')
                 }
+
+                const uploaded = await uploadNewImage();
+
+                if (!uploaded) {
+                    toast.error("Erro ao fazer upload da imagem, tente novamente mais tarde.");
+                    return;
+                }
+
+                finalPhoto = uploaded;
+            }
+
+            if (initialMovieData) {
+                const response = await movieService.update(String(initialMovieData._id), {
+                    ...data,
+                    photo: finalPhoto,
+                },
+                    initialMovieData.createdAt,
+                    initialMovieData.updatedAt
+                );
+
+                if (response.status === 200) {
+                    toast.success("Dados do filme em cartaz atualizados com sucesso!");
+                } else {
+                    toast.error("Erro ao atualizar dados do filme em cartaz, tente novamente mais tarde.");
+                }
+
+                return;
+            }
+
+            const response = await movieService.create({
+                ...data,
+                photo: finalPhoto,
+            });
+
+            if (response.status === 201) {
+                toast.success("Dados do filme em cartaz criados com sucesso!");
+
+                reset();
+                setSelectedFile(null);
+                router.push('/')
+            } else {
+                toast.error("Erro ao criar dados do filme em cartaz, tente novamente mais tarde.");
+            }
+        } catch (error) {
+            if (isAxiosError(error) && error.response) {
+                switch (error.response.status) {
+                    case 400:
+                        toast.error("Erro, dados inválidos!");
+                        break;
+                    case 401:
+                        toast.error("Erro, sessão expirada, faça login novamente!");
+                        localStorage.removeItem("acessToken");
+                        router.push("/");
+                        break;
+                    case 404:
+                        toast.error("Erro, filme não encontrado com ID fornecido!");
+                        break;
+                    case 422:
+                        toast.error("Erro, ID inválido ou já existe um filme cadastrado!");
+                        break;
+                    case 500:
+                        toast.error("Erro interno do servidor, tente novamente mais tarde!");
+                        break;
+                    default:
+                        toast.error(`Erro desconhecido ao ${initialMovieData ? "atualizar" : "criar"} filme, tente novamente mais tarde!`);
+                }
+            } else {
+                toast.error("Erro desconhecido ao processar a solicitação, tente novamente mais tarde!");
             }
         }
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 items-center">
-            <div className="flex w-full justify-center gap-4">
-                <div className="flex flex-col w-[40%] items-center gap-2">
-                    <Label htmlFor="string">Título</Label>
-                    <Input
-                        type="text"
-                        {...register('title')}
-                        disabled={isSubmitting}
-                    />
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="w-full max-w-xl mx-auto bg-zinc-800/80 backdrop-blur-sm rounded-2xl border border-zinc-700 shadow-2xl p-4 sm:p-6 space-y-5"
+        >
+            <div className="space-y-1.5">
+                <label htmlFor="title" className="block text-sm font-medium text-zinc-300">
+                    Título <span className="text-rose-400">*</span>
+                </label>
 
-                    {errors.title && (
-                        <span className="text-[rgb(238, 80, 80)] text-sm ml-2.5">
-                            {errors.title.message}
-                        </span>
-                    )}
-                </div>
+                <Input
+                    id="title"
+                    {...register("title")}
+                    placeholder="Digite o título do filme"
+                    disabled={isSubmitting}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                />
 
-                <div className="flex flex-col w-[40%] items-center gap-2">
-                    <Label htmlFor="string">Gênero</Label>
-                    <Input
-                        type="text"
-                        {...register('movie_genre')}
-                        disabled={isSubmitting}
-                    />
-
-                    {errors.movie_genre && (
-                        <span className="text-[rgb(238, 80, 80)] text-sm ml-2.5">
-                            {errors.movie_genre.message}
-                        </span>
-                    )}
-                </div>
+                {errors.title && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.title.message}
+                    </span>
+                )}
             </div>
 
-            <div className="flex flex-col items-center w-[60%] gap-2">
-                <Label htmlFor="string">Sinopse</Label>
-                <Textarea
-                    {...register('synopsis')}
+            <div className="space-y-1.5">
+                <label htmlFor="movie_genre" className="block text-sm font-medium text-zinc-300">
+                    Gênero <span className="text-rose-400">*</span>
+                </label>
+
+                <Input
+                    id="movie_genre"
+                    {...register("movie_genre")}
+                    placeholder="Ex: Ação, Drama, Comédia"
                     disabled={isSubmitting}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                />
+
+                {errors.movie_genre && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.movie_genre.message}
+                    </span>
+                )}
+            </div>
+
+            <div className="space-y-1.5">
+                <label htmlFor="synopsis" className="block text-sm font-medium text-zinc-300">
+                    Sinopse <span className="text-rose-400">*</span>
+                </label>
+
+                <Textarea
+                    id="synopsis"
+                    {...register("synopsis")}
+                    placeholder="Descreva a história do filme..."
+                    disabled={isSubmitting}
+                    rows={4}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed resize-y text-sm sm:text-base"
                 />
 
                 {errors.synopsis && (
-                    <span className="text-[rgb(238, 80, 80)] text-sm ml-2.5">
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
                         {errors.synopsis.message}
                     </span>
                 )}
-
-                <div className="flex flex-col gap-2 items-center w-[20%]">
-                    <Label htmlFor="time">Duração</Label>
-                    <Input
-                        type="time"
-                        {...register('duration')}
-                        disabled={isSubmitting}
-                    />
-
-                    {errors.duration && (
-                        <span className="text-[rgb(238, 80, 80)] text-sm ml-2.5">
-                            {errors.duration.message}
-                        </span>
-                    )}
-                </div>
             </div>
 
-            <div className="flex w-full justify-center gap-6">
-                <div className="flex flex-col gap-2 items-center w-[40%]">
-                    <Label htmlFor="file">Imagem</Label>
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageFileChange}
-                        className="hover:cursor-pointer"
-                        disabled={isSubmitting}
-                    />
+            <div className="space-y-1.5">
+                <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
+                    Duração do filme (HH:MM) <span className="text-rose-400">*</span>
+                </label>
 
-                    {/* {selectedFile && (
-                        <div className="mt-2">
-                            <p className="text-sm">Prévia: {selectedFile.name}</p>
-                            <img
-                                src={URL.createObjectURL(selectedFile)}
-                                alt="Preview"
-                                className="mt-2 max-h-40 rounded"
-                            />
-                        </div>
-                    )} */}
+                <Input
+                    id="duration"
+                    type="time"
+                    {...register("duration")}
+                    disabled={isSubmitting}
+                    className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
+                   transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                />
 
-                    {(selectedFile || initialMovieData?.photo) && (
-                        <div className="mt-2">
-                            <p className="text-sm">
-                                Prévia:
-                            </p>
-
-                            <img
-                                src={
-                                    selectedFile
-                                        ? URL.createObjectURL(selectedFile)
-                                        : initialMovieData?.photo
-                                }
-                                alt="Preview"
-                                className="mt-2 max-h-40 rounded"
-                            />
-                        </div>
-                    )}
-
-                    {errors.photo && (
-                        <span className="text-[rgb(238, 80, 80)] text-sm ml-2.5">
-                            {errors.photo.message}
-                        </span>
-                    )}
-                </div>
+                {errors.duration && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.duration.message}
+                    </span>
+                )}
             </div>
 
-            <Button
-                type="button"
-                disabled={isSubmitting}
-                className="hover:cursor-pointer"
-            >
-                Cancelar
-            </Button>
+            <div className="space-y-1.5">
+                <label htmlFor="photo" className="block text-sm font-medium text-zinc-300">
+                    Pôster do filme <span className="text-rose-400">*</span>
+                </label>
+
+                <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    disabled={isSubmitting}
+                    className="w-full text-sm text-zinc-200 
+                   file:mr-4 file:py-2 file:px-4 
+                   file:rounded-lg file:border-0 file:text-sm file:font-semibold 
+                   file:bg-purple-600 file:text-white file:hover:bg-purple-700 
+                   file:transition file:cursor-pointer 
+                   disabled:opacity-50 
+                   bg-zinc-900/70 border-zinc-600 rounded-xl
+                   h-10
+                   leading-tight
+                   file:h-full"
+                />
+
+                {errors.photo && (
+                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                        {errors.photo.message}
+                    </span>
+                )}
+            </div>
+
+            {(previewUrl || initialMovieData?.photo) && (
+                <div className="flex justify-center pt-2">
+                    <img
+                        src={previewUrl ?? initialMovieData?.photo}
+                        alt="Pré-visualização do poster"
+                        className="max-h-48 rounded-lg border border-zinc-600 shadow-md object-cover hover:scale-105 transition-transform duration-200"
+                    />
+                </div>
+            )}
 
             <Button
                 type="submit"
                 disabled={isSubmitting || !isDirty}
-                className="hover:cursor-pointer"
+                className={`
+        w-full py-2.5 font-semibold rounded-xl transition-all duration-200 text-sm sm:text-base hover:cursor-pointer
+        ${isSubmitting || !isDirty
+                        ? "bg-zinc-700 text-zinc-400 cursor-not-allowed opacity-60"
+                        : "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-purple-500/30 active:scale-[0.98]"
+                    }
+      `}
             >
-                {initialMovieData ? 'Atualizar' : 'Salvar'}
+                {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        {initialMovieData ? "Atualizando..." : "Salvando..."}
+                    </span>
+                ) : (
+                    initialMovieData ? "Atualizar dados do filme" : "Salvar dados do filme"
+                )}
             </Button>
         </form>
-    )
+    );
 }

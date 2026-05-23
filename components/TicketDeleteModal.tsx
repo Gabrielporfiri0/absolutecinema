@@ -88,7 +88,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                 if (onUpdatePage) onUpdatePage()
             }
         } catch (error) {
-            console.error('Erro ao deletar ingresso:', error);
+            console.log('Erro ao deletar ingresso:', error);
             toast.error('Erro ao deletar ingresso, tente novamente mais tarde')
         } finally {
             setIsLoading(false);

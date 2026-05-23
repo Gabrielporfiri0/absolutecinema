@@ -28,7 +28,7 @@ export async function DELETE(
 
         await adminsCollection.deleteOne({ _id: ObjectId.createFromHexString(id) })
 
-        return NextResponse.json({ message: 'Admin deletado com sucesso' }, { status: 200 })
+        return NextResponse.json({ status: 204 })
     } catch (error) {
         console.log('Erro ao deletar admin: ', error)
         return NextResponse.json({ error: 'Erro ao deletar admin' }, { status: 500 })

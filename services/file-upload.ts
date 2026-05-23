@@ -1,6 +1,5 @@
 import { localStorageUtil } from "@/lib/localStorage_";
 import axios from "axios";
-// import Cookies from "js-cookie"
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
 
@@ -50,7 +49,7 @@ export const fileUploadService = {
 
   deleteImage: async (imageUrl: string) => {
     const authorizationHeader = getAuthHeaders()
-    
+
     const response = await axios.delete("/api/fileUpload", {
       data: { imageUrl },
       headers: {

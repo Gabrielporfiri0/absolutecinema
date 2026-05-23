@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date()
         })
 
-        return NextResponse.json({ message: "Filme cadastrado com sucesso!", id: response.insertedId }, { status: 201 })
+        return NextResponse.json({ message: "Filme cadastrado com sucesso!", id: String(response.insertedId) }, { status: 201 })
     } catch (error) {
         console.log('Erro ao realizar POST do filme: ', error)
         return NextResponse.json({ error: 'Erro interno no servidor ao adicionar filme!!' }, { status: 500 })

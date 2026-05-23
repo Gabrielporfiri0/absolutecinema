@@ -89,7 +89,7 @@ export async function DELETE(
 
         await collection.deleteOne({ _id: ObjectId.createFromHexString(id) })
 
-        return NextResponse.json({ message: 'Filme deletado com sucesso!!' }, { status: 200 })
+        return NextResponse.json({ status: 204 })
     } catch (error) {
         console.log('Erro ao deletar filme: ', error)
         return NextResponse.json({ error: 'Erro interno no servidor ao deletar um filme!!' }, { status: 500 })

@@ -1,7 +1,6 @@
 import { localStorageUtil } from "@/lib/localStorage_";
-import { MovieDataToSent, MovieFormData, Movies } from "@/types/movies";
+import { GetMoviesSuccessResponse, MovieFormData, Movies, PostMoviesSuccessResponse, PutMoviesSuccessResponse } from "@/types/movies";
 import axios from "axios";
-import { ObjectId } from "mongodb";
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
 
@@ -19,15 +18,7 @@ const getAuthHeaders = () => {
 export const movieService = {
     create: async (data: MovieFormData) => {
         const authorizationHeader = getAuthHeaders()
-        // const formData = new FormData();
-
-        // formData.append('title', data.title);
-        // formData.append('movie_genre', data.movie_genre);
-        // formData.append('synopsis', data.synopsis);
-        // formData.append('duration', data.duration);
-        // formData.append('photo', data.photo);
-
-        const response = await axios.post('/api/movies', data, {
+        const response = await axios.post<PostMoviesSuccessResponse>('/api/movies', data, {
             headers: {
                 'Content-Type': 'application/json' ,
                 ...authorizationHeader
@@ -39,7 +30,7 @@ export const movieService = {
 
     get: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.get('/api/movies', {
+        const response = await axios.get<GetMoviesSuccessResponse>('/api/movies', {
             headers: {
                 ...authorizationHeader
             },
@@ -60,21 +51,7 @@ export const movieService = {
             updatedAt: updated_at
         }
 
-        // const formData = new FormData();
-
-        // formData.append('_id', id);
-        // formData.append('title', data.title);
-        // formData.append('movie_genre', data.movie_genre);
-        // formData.append('synopsis', data.synopsis);
-        // formData.append('duration', data.duration);
-        // formData.append('created_at', created_at);
-        // formData.append('updated_at', updated_at);
-        
-        // if (data.photo instanceof File) {
-        //     formData.append('photo', data.photo);
-        // }
-
-        const response = await axios.put(`/api/movies/${id}`, payload, {
+        const response = await axios.put<PutMoviesSuccessResponse>(`/api/movies/${id}`, payload, {
             headers: {
                 'Content-Type': 'application/json',
                 ...authorizationHeader

@@ -83,7 +83,7 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
           };
         }
       } catch (err) {
-        console.error('Failed creating YT player', err);
+        console.log('Failed creating YT player', err);
       }
     };
 

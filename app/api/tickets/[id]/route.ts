@@ -59,7 +59,7 @@ export async function DELETE(
 
         await collection.deleteOne({ _id: ObjectId.createFromHexString(id) })
 
-        return NextResponse.json({ message: 'Ingresso deletado com sucesso' }, { status: 200 })
+        return NextResponse.json({ status: 204 })
     } catch (error) {
         console.log('Erro ao realizar DELETE do ingresso: ', error)
         return NextResponse.json({ error: 'Erro ao deletar ingresso' }, { status: 500 })

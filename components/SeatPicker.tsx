@@ -61,7 +61,7 @@ export default function SeatPicker() {
       }
 
       if (returnedData.status === 500) {
-        console.error('Erro ao buscar dados dos assentos');
+        console.log('Erro ao buscar dados dos assentos');
       }
     } catch (error) {
       console.log('Erro ao buscar dados de todos os assentos registrados: ', error);
@@ -140,7 +140,7 @@ export default function SeatPicker() {
       setNome('');
       setCpf('');
     } catch (error) {
-      console.error('Erro ao enviar reserva:', error);
+      console.log('Erro ao enviar reserva:', error);
       toast.error('Erro ao realizar reserva(s), tente novamente mais tarde');
     }
   };

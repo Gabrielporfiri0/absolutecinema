@@ -88,7 +88,7 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
                 if (onUpdatePage) onUpdatePage()
             }
         } catch (error) {
-            console.error('Erro ao deletar admin:', error);
+            console.log('Erro ao deletar admin:', error);
             toast.error('Erro ao deletar admin, tente novamente mais tarde');
         } finally {
             setIsLoading(false);

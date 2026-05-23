@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
             folder: "movies"
         }, { status: 201 });
     } catch(error){
+        console.log("Erro ao gerar assinatura para upload de imagem: ", error);
         return NextResponse.json({
             error: 'Erro interno no servidor ao realizar POST para upload de imagem',
         }, { status: 500 })
@@ -57,8 +58,7 @@ export async function DELETE(request: NextRequest) {
 
         const { imageUrl } = await request.json();
 
-        if (!imageUrl)
-            return NextResponse.json({ error: "URL não enviada" }, { status: 400 });
+        if (!imageUrl) return NextResponse.json({ error: "URL não enviada" }, { status: 400 });
 
         const publicId = extractPublicId(imageUrl);
 
@@ -67,9 +67,9 @@ export async function DELETE(request: NextRequest) {
 
         await cloudinary.uploader.destroy(publicId);
 
-        return NextResponse.json({ message: 'ok' }, { status: 204 });
-
+        return NextResponse.json({ status: 204 });
     } catch (err) {
+        console.log("Erro ao deletar imagem: ", err);
         return NextResponse.json(
             { error: "Erro ao interno no servidor ao realizar DELETE de imagem" },
             { status: 500 }
