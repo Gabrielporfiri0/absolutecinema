@@ -117,54 +117,49 @@ export default function Page() {
     const handleLogout = async () => {
         setIsProcessingLogout(true);
 
-        const acessToken_ = localStorageUtil.getItem('acessToken')
-
-        if (!acessToken_) {
-            toast.error('Token não encontrado, faça login novamente');
-            setIsProcessingLogout(false);
-            router.push('/')
-            return
-        }
-
         try {
-            const response = await fetch('/api/admin/logout', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${acessToken_}`,
-                    'Content-Type': 'application/json',
+            const response = await adminsService.logout()
+
+            if (response.status === 200) {
+
+                const hasItWorked = localStorageUtil.removeItem('acessToken')
+
+                if (!hasItWorked) {
+                    toast.error('Erro ao realizar logout!, tente novamente mais tarde');
+                    setIsProcessingLogout(false);
+                    return
                 }
-            })
 
-            const returnedResponse = await response.json()
-
-            if (returnedResponse.status === 500) {
-                toast.error('Erro ao realizar logout, tente novamente mais tarde');
-                setIsProcessingLogout(false);
-                return
-            }
-
-            if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente');
+                toast.success('Logout realizado com sucesso!!!');
                 setIsProcessingLogout(false);
                 router.push('/')
                 return
-            }
-
-            const hasItWorked = localStorageUtil.removeItem('acessToken')
-
-            if (!hasItWorked) {
+            } else {
                 toast.error('Erro ao realizar logout, tente novamente mais tarde');
                 setIsProcessingLogout(false);
                 return
             }
-
-            toast.success('Logout realizado com sucesso !!!');
-            setIsProcessingLogout(false);
-            router.push('/')
-            return
         } catch (error) {
             console.log('Erro ao deslogar admin: ', error)
-            toast.error('Erro ao realizar logout, tente novamente mais tarde');
+
+            if (isAxiosError(error) && error.response) {
+                switch (error.response.status) {
+                    case 401:
+                        toast.error('Sessão expirada, faça login novamente!');
+                        localStorageUtil.removeItem('acessToken')
+                        router.push('/')
+                        break;
+                    case 500:
+                        toast.error('Erro no servidor ao realizar logout, tente novamente mais tarde!');
+                        break;
+                    default:
+                        toast.error('Erro ao realizar logout, tente novamente mais tarde!');
+                        break;
+                }
+            } else {
+                toast.error('Erro ao realizar logout, tente novamente mais tarde!');
+            }
+        } finally {
             setIsProcessingLogout(false);
         }
     }
@@ -185,10 +180,34 @@ export default function Page() {
             return
         }
 
+        if (newAdminUser.trim().length === 0) {
+            toast.error('O nome de usuário não pode conter apenas espaços em branco!');
+            setNewAdminBeingRegistered(false);
+            return
+        }
+
+        if (newAdminPassword.trim().length === 0) {
+            toast.error('A senha não pode conter apenas espaços em branco!');
+            setNewAdminBeingRegistered(false);
+            return
+        }
+
+        if(newAdminUser.trim().length < 3 || newAdminUser.trim().length > 20) {
+            toast.error('O nome de usuário deve conter no mínimo 3 caracteres e no máximo 20!');
+            setNewAdminBeingRegistered(false);
+            return
+        }
+
+        if (newAdminPassword.trim().length < 6 || newAdminPassword.trim().length > 20) {
+            toast.error('A senha deve conter no mínimo 6 caracteres e no máximo 20!');
+            setNewAdminBeingRegistered(false);
+            return
+        }
+
         try {
             const response = await adminsService.create({
-                name: newAdminUser,
-                password: newAdminPassword
+                name: newAdminUser.trim(),
+                password: newAdminPassword.trim()
             })
 
             if(response.status === 201) {

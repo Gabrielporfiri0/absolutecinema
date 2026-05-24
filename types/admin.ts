@@ -1,5 +1,14 @@
 import { ObjectId } from "mongodb"
 
+export type LogoutAdminApiSuccessResponse = {
+    success: boolean
+}
+
+export type LoginAdminApiSuccessResponse = {
+    message: string,
+    token: string
+}
+
 export type GetAdminsSuccessResponse = {
     message: string,
     admin__: AdminUser[]

@@ -1,5 +1,5 @@
 import { localStorageUtil } from "@/lib/localStorage_";
-import { AdminDataToBeSentInRegister, GetAdminsSuccessResponse, PostAdminSuccessResponse } from "@/types/admin";
+import { AdminDataToBeSentInRegister, GetAdminsSuccessResponse, LoginAdminApiSuccessResponse, PostAdminSuccessResponse } from "@/types/admin";
 import axios from "axios";
 
 const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
@@ -46,6 +46,25 @@ export const adminsService = {
             },
         })
 
+        return response
+    },
+    login: async (data: AdminDataToBeSentInRegister) => {
+        const response = await axios.post<LoginAdminApiSuccessResponse>('/api/admin/login', data, {
+            headers: {
+                'Content-Type': 'application/json' ,
+            },
+        })
+
+        return response
+    },
+    logout: async () => {
+        const authorizationHeader = getAuthHeaders()
+        const response = await axios.post('/api/admin/logout', null, {
+            headers: {
+                'Content-Type': 'application/json' ,
+                ...authorizationHeader
+            },
+        })
         return response
     }
 }

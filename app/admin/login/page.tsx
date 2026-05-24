@@ -1,7 +1,9 @@
 'use client'
 
-import { loginUser } from "@/app/actions/login_"
 import { localStorageUtil } from "@/lib/localStorage_"
+import { adminsService } from "@/services/admins"
+import { isAxiosError } from "axios"
+import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -11,6 +13,8 @@ export default function Page() {
     const [userPassword, setUserPassword] = useState<string>('')
     const [isProcessingLogin, setIsProcessingLogin] = useState<boolean>(false)
     const router = useRouter()
+
+    const [showPassword, setShowPassword] = useState(false)
 
     const handleLoginNewAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,43 +27,35 @@ export default function Page() {
             return
         }
 
+        if(userName.trim() === '' || userPassword.trim() === '') {
+            toast.error('Usuário e senha não podem conter apenas espaços em branco!')
+            setIsProcessingLogin(false)
+            return
+        }
+
+        if(userName.trim().length < 3 || userName.trim().length > 20) {
+            toast.error('Usuário deve ter entre 3 e 20 caracteres')
+            setIsProcessingLogin(false)
+            return
+        }
+
+        if(userPassword.trim().length < 6 || userPassword.trim().length > 20) {
+            toast.error('Senha deve ter entre 6 e 20 caracteres')
+            setIsProcessingLogin(false)
+            return
+        }
+
         try {
-            const result = await loginUser(userName, userPassword);
+            const response = await adminsService.login({
+                name: userName.trim(),
+                password: userPassword.trim()
+            })
 
-            if (!result.success) {
-                if(result.status === 400) {
-                    toast.error('Por favor, forneça todos os dados')
-                    setIsProcessingLogin(false)
-                    return
-                }
-
-                if(result.status === 404) {
-                    toast.error('Usuário não encontrado')
-                    setIsProcessingLogin(false)
-                    return
-                }
-
-                if(result.status === 401) {
-                    toast.error('Credenciais inválidas')
-                    setIsProcessingLogin(false)
-                    return
-                }
-
-                if(result.status === 500) {
-                    toast.error('Erro ao realizar login, tente novamente mais tarde')
-                    setIsProcessingLogin(false)
-                    return
-                }
-
-
-            }
-
-            if (result.status === 200) {
-                
-                const tokenIsSet = localStorageUtil.setItem('acessToken', result.token || '')
+            if (response.status === 200) {
+                const tokenIsSet = localStorageUtil.setItem('acessToken', response.data.token || '')
                 
                 if(tokenIsSet){
-                    toast.success('Login realizado com sucesso !!!')
+                    toast.success('Login realizado com sucesso!!!')
                     setUserName('')
                     setUserPassword('')
                     setIsProcessingLogin(false)
@@ -68,11 +64,28 @@ export default function Page() {
                 }
 
                 setIsProcessingLogin(false)
+            } else {
+                toast.error('Erro ao realizar login, tente novamente mais tarde!')
+                setIsProcessingLogin(false)
             }
         } catch (error) {
             console.log('Erro ao tentar logar admin: ', error)
-            toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
-            setIsProcessingLogin(false)
+
+            if(isAxiosError(error) && error.response) {
+                if(error.response.data && error.response.data.error) {
+                    toast.error(error.response.data.error)
+                    setIsProcessingLogin(false)
+                    return
+                } else {
+                    toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
+                    setIsProcessingLogin(false)
+                    return
+                }
+            } else {
+                toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
+                setIsProcessingLogin(false)
+                return
+            }
         }
     }
 
@@ -97,14 +110,36 @@ export default function Page() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
-                        <input
-                            type="password"
-                            value={userPassword}
-                            onChange={(e) => setUserPassword(e.target.value)}
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none"
-                            disabled={isProcessingLogin}
-                        />
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Senha
+                        </label>
+
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={userPassword}
+                                onChange={(e) =>
+                                    setUserPassword(e.target.value)
+                                }
+                                className="w-full p-3 pr-12 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none"
+                                disabled={isProcessingLogin}
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowPassword(!showPassword)
+                                }
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                disabled={isProcessingLogin}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
                     </div>
              
                     <button 

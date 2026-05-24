@@ -63,8 +63,8 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             newErrors.name = "Nome é obrigatório";
         }
 
-        if (formData.name.trim().length > 100) {
-            newErrors.name = "Nome não pode exceder 100 caracteres";
+        if (formData.name.trim().length < 2 || formData.name.trim().length > 100) {
+            newErrors.name = "Nome deve conter entre 2 e 100 caracteres";
         }
 
         if (!formData.cpf.trim()) {
