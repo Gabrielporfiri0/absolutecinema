@@ -24,7 +24,7 @@ export async function DELETE(
 
         const admin_ = await adminsCollection.findOne({ _id: ObjectId.createFromHexString(id) })
 
-        if (!admin_) return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 })
+        if (!admin_) return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 })                       
 
         await adminsCollection.deleteOne({ _id: ObjectId.createFromHexString(id) })
 
@@ -83,7 +83,7 @@ export async function PUT(
             name: data.name,
             password: hashedPassword,
             createdAt: data.createdAt,
-            updatedAt: Date()
+            updatedAt: new Date()
         }
 
         await adminsCollection.updateOne(

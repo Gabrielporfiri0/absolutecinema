@@ -22,3 +22,12 @@ export type TicketApi = {
     createdAt: string,
     updatedAt: string
 }
+
+export type GetTicketsSuccessResponse = {
+    message: string,
+    tickets__: TicketApi[]
+}
+
+export type PutTicketSuccessResponse = {
+    message: string,
+}

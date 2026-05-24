@@ -12,6 +12,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff } from 'lucide-react';
 import HandleMovieInformations from "@/components/HandleMovieInformations";
+import { isAxiosError } from "axios";
+import { ticketsService } from "@/services/tickets";
+import { adminsService } from "@/services/admins";
 
 export default function Page() {
     const router = useRouter()
@@ -41,101 +44,74 @@ export default function Page() {
 
     const getAllReserves = async () => {
         try {
-            const acessToken_ = localStorageUtil.getItem('acessToken')
+            const response = await ticketsService.getAll()
 
-            if (!acessToken_) {
-                toast.error('Token não encontrado !!!');
-                router.push('/')
-                return
-            }
-
-            const response = await fetch('/api/tickets/getAllTickets', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${acessToken_}`,
-                    'Content-Type': 'application/json',
-                }
-            })
-
-            const returnedResponse = await response.json()
-
-            console.log('Resposta da API de busca de reservas No DASHBOARD: ', returnedResponse)
-
-            if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente');
-                router.push('/')
-                return
-            }
-
-            if (returnedResponse.status === 200) {
-                setReservas(returnedResponse.tickets__)
+            if (response.status === 200) {
+                console.log('Resposta da API de Tickets no dashboard do admin: ', response.data)
+                setReservas(response.data.tickets__)
+            } else {
+                toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
             }
         } catch (error) {
             console.log('Erro ao buscar dados dos ingressos cadastrados: ', error)
-            toast.error('Erro ao buscar dados dos ingressos cadastrados !!!');
+
+            if(isAxiosError(error) && error.response){
+                switch(error.response.status){
+                    case 401:
+                        toast.error('Sessão expirada, faça login novamente');
+                        localStorageUtil.removeItem('acessToken')
+                        router.push('/')
+                        break;
+                    case 500:
+                        toast.error('Erro no servidor ao buscar dados dos ingressos cadastrados, tente novamente mais tarde!');
+                        break;
+                    default:
+                        toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
+                        break;
+                }
+            } else {
+                toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
+            }
         }
     }
 
     const getAllAdmins = async () => {
         try {
-            const acessToken_ = localStorageUtil.getItem('acessToken')
+            const response = await adminsService.getAll()
 
-            if (!acessToken_) {
-                toast.error('Token não encontrado, faça login novamente');
-                router.push('/')
-                return
-            }
-
-            const response = await fetch('/api/admin/getAll', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${acessToken_}`,
-                    'Content-Type': 'application/json',
-                }
-            })
-
-            const returnedResponse = await response.json()
-
-            if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente');
-                router.push('/')
-                return
-            }
-
-            if (returnedResponse.status === 200) {
-                setAdmins(returnedResponse.admin__)
+            if(response.status === 200){
+                setAdmins(response.data.admin__)
+            } else {
+                toast.error('Erro ao buscar dados dos admins cadastrados!!!');
             }
         } catch (error) {
             console.log('Erro ao buscar dados dos admins cadastrados: ', error)
-            toast.error('Erro ao buscar dados dos admins cadastrados !!!');
+
+            if(isAxiosError(error) && error.response){
+                switch(error.response.status){
+                    case 401:
+                        toast.error('Sessão expirada, faça login novamente');
+                        localStorageUtil.removeItem('acessToken')
+                        router.push('/')
+                        break;
+                    case 500:
+                        toast.error('Erro interno no servidor ao buscar dados dos admins cadastrados, tente novamente mais tarde!');
+                        break;
+                    default:
+                        toast.error('Erro ao buscar dados dos admins cadastrados!!!');
+                        break;
+                }
+            } else {
+                toast.error('Erro ao buscar dados dos admins cadastrados!!!');
+            }
         }
     }
 
-    // useEffect(() => {
-    //     setLoading(true);
-    //     getAllReserves()
-    //     getAllAdmins()
-    //     setLoading(false);
-    // }, []);
-
     useEffect(() => {
-        async function loadData() {
-            try {
-                setLoading(true);
-
-                await Promise.all([
-                    getAllReserves(),
-                    getAllAdmins()
-                ]);
-            } catch (error) {
-                console.log('Erro ao carregar dashboard:', error);
-                toast.error('Erro ao carregar dados');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadData();
+        setLoading(true);
+        getAllReserves()
+        getAllAdmins()
+        setLoading(false);
     }, []);
 
     const handleLogout = async () => {
@@ -203,57 +179,45 @@ export default function Page() {
 
         setNewAdminBeingRegistered(true);
 
-        const acessToken_ = localStorageUtil.getItem('acessToken')
-
-        if (!acessToken_) {
-            toast.error('Token não encontrado, faça login novamente');
-            setNewAdminBeingRegistered(false);
-            router.push('/')
-            return
-        }
-
         if (!newAdminUser || !newAdminPassword) {
-            toast.error('Preencha usuário e senha para o novo admin');
+            toast.error('Preencha usuário e senha para o novo admin!');
             setNewAdminBeingRegistered(false);
             return
         }
 
         try {
-            const response = await fetch('/api/admin/register', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${acessToken_}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: newAdminUser,
-                    password: newAdminPassword
-                })
+            const response = await adminsService.create({
+                name: newAdminUser,
+                password: newAdminPassword
             })
 
-            const returnedResponse = await response.json()
-
-            if (returnedResponse.status === 201) {
+            if(response.status === 201) {
                 toast.success(`Administrador "${newAdminUser}" cadastrado com sucesso!`);
                 setNewAdminUser('')
                 setNewAdminPassword('')
                 getAllAdmins()
                 setNewAdminBeingRegistered(false);
                 return
-            }
-            else if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente');
-                setNewAdminBeingRegistered(false);
-                router.push('/')
-                return
             } else {
-                toast.error(`Erro ao cadastrar novo admin: ${returnedResponse.error}`);
-                setNewAdminBeingRegistered(false);
-                return
+                toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!')
             }
         } catch (error) {
             console.log('Erro ao cadastrar novo admin: ', error)
-            toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde');
+
+            if(isAxiosError(error) && error.response){
+                if(error.response.status === 401){
+                    toast.error('Sessão expirada, faça login novamente!');
+                    setNewAdminBeingRegistered(false);
+                    router.push('/')
+                    return
+                } else if (error.response.data && error.response.data.error) {
+                    toast.error(error.response.data.error);
+                } else {
+                    toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!');
+                }
+            } else { 
+                toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!');
+            }
         } finally {
             setNewAdminBeingRegistered(false);
         }

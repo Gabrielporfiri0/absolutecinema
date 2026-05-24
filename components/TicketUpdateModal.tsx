@@ -18,6 +18,8 @@ import { mascaraCPF, validarCPF } from "@/lib/cpfUtils";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ticketsService } from "@/services/tickets";
+import { isAxiosError } from "axios";
 
 interface Props {
     ticketDataToBePossibleUpdated: TicketApi,
@@ -61,6 +63,10 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             newErrors.name = "Nome é obrigatório";
         }
 
+        if (formData.name.trim().length > 100) {
+            newErrors.name = "Nome não pode exceder 100 caracteres";
+        }
+
         if (!formData.cpf.trim()) {
             newErrors.cpf = "CPF é obrigatório";
         } else if (!validarCPF(formData.cpf)) {
@@ -93,16 +99,6 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
         setIsLoading(true);
 
         try {
-            const acessToken = localStorageUtil.getItem('acessToken');
-            if (!acessToken) {
-                toast.error('Sessão expirada. Por favor, faça login novamente.');
-                localStorageUtil.clear()
-                setIsLoading(false)
-                setIsOpen(false);
-                router.push('/')
-                return;
-            }
-
             const ticketData: Ticket = {
                 name: formData.name.trim(),
                 cpf: formData.cpf,
@@ -111,45 +107,40 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                 updatedAt: ticketDataToBePossibleUpdated.updatedAt
             };
 
-            const response = await fetch(`/api/tickets/${ticketDataToBePossibleUpdated._id}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${acessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(ticketData)
-            });
+            const response = await ticketsService.update(String(ticketDataToBePossibleUpdated._id), ticketData)
 
-            const returnedResponse = await response.json()
-
-            if (returnedResponse.status === 400) {
-                toast.error(`ID inválido, ou o assento ${formData.seat} já foi reservado, ou o CPF: ${formData.cpf} já foi registrado em 4 ingressos. Tente novamente.`)
-                setIsLoading(false)
-            }
-
-            if (returnedResponse.status === 401) {
-                toast.error('Sessão expirada. Por favor, faça login novamente.');
-                localStorageUtil.clear()
-                setIsOpen(false)
-                setIsLoading(false)
-                router.push('/')
-                return
-            }
-
-            if (returnedResponse.status === 404) toast.error('Ingresso não encontrado');
-
-            if (returnedResponse.status === 500) toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
-
-            if (returnedResponse.status === 200) {
-                toast.success('Ingresso atualizado com sucesso!!!');
+            if (response.status === 200) {
+                toast.success('Reserva atualizada com sucesso!!!');
                 setIsOpen(false)
                 setIsLoading(false)
 
                 if (onUpdatePage) onUpdatePage()
+            } else {
+                toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
+                setIsLoading(false)
             }
         } catch (error) {
-            console.log('Erro ao atualizar ingresso:', error);
-            toast.error('Erro ao atualizar ingresso, tente novamente mais tarde');
+            console.log('Erro ao atualizar reserva:', error);
+
+            if(isAxiosError(error) && error.response) {
+                if(error.response.status === 401) {
+                    toast.error('Sessão expirada. Por favor, faça login novamente.');
+                    localStorageUtil.removeItem('acessToken')
+                    setIsOpen(false)
+                    setIsLoading(false)
+                    router.push('/')
+                    return
+                }
+            
+                if(error.response.data && error.response.data.error) {
+                    const errorMessage = error.response.data.error;
+                    toast.error(errorMessage);
+                } else {
+                    toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
+                }
+            } else {
+                toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -179,11 +170,11 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-[425px] text-black">
+            <DialogContent className="sm:max-w-106.25 text-black">
                 <DialogHeader>
-                    <DialogTitle>Atualização de Ingresso</DialogTitle>
+                    <DialogTitle>Atualização da Reserva</DialogTitle>
                     <DialogDescription>
-                        Atualize os dados do ingresso abaixo
+                        Atualize os dados da reserva abaixo
                     </DialogDescription>
                 </DialogHeader>
 

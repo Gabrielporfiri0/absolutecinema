@@ -1,5 +1,15 @@
 import { ObjectId } from "mongodb"
 
+export type GetAdminsSuccessResponse = {
+    message: string,
+    admin__: AdminUser[]
+}
+
+export type PostAdminSuccessResponse = {
+    message: string,
+    id: string
+}
+
 export type AdminDataToBeSentInRegister = {
     name: string,
     password: string
