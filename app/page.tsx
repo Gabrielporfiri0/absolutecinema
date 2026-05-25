@@ -96,7 +96,7 @@ export default function HomePage() {
                 <div className="mt-auto">
                   <ReserveButtonGuard
                     filmId={String(movieData._id)}
-                    className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40"
+                    className="inline-block w-full md:w-auto text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-red-600/40 hover:cursor-pointer"
                   >
                     Reservar Assento
                   </ReserveButtonGuard>

@@ -1,8 +1,15 @@
 import { localStorageUtil } from "@/lib/localStorage_";
-import { GetTicketsSuccessResponse, PutTicketSuccessResponse, Ticket } from "@/types/ticket";
+import { 
+    GetAllTicketsSuccessResponse, 
+    GetTicketsSuccessResponse, 
+    PostTicketSuccessResponse, 
+    PutTicketSuccessResponse, 
+    Ticket, 
+    TicketDataToBeSent 
+} from "@/types/ticket";
 import axios from "axios";
 
-const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
+const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente!"
 
 const getAuthHeaders = () => {
     const cookie = localStorageUtil.getItem('acessToken')
@@ -44,6 +51,14 @@ export const ticketsService = {
             },
         })
 
+        return response
+    },
+    getAllSeats: async () => {
+        const response = await axios.get<GetAllTicketsSuccessResponse>('/api/tickets/getAllSeats')
+        return response
+    },
+    create: async (dataToBeSent: TicketDataToBeSent) => {
+        const response = await axios.post<PostTicketSuccessResponse>('/api/tickets/register', dataToBeSent)
         return response
     }
 }

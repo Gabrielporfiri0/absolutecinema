@@ -31,3 +31,13 @@ export type GetTicketsSuccessResponse = {
 export type PutTicketSuccessResponse = {
     message: string,
 }
+
+export type GetAllTicketsSuccessResponse = {
+    message: string,
+    seats__: number[]
+}
+
+export type PostTicketSuccessResponse = {
+    message: string,
+    id: string
+}
