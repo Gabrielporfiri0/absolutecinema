@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Ticket, TicketApi } from "@/types/ticket";
-import { mascaraCPF, validarCPF } from "@/lib/cpfUtils";
+import { maskCPF, validateCPF } from "@/lib/cpfUtils";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
 
         if (!formData.cpf.trim()) {
             newErrors.cpf = "CPF é obrigatório";
-        } else if (!validarCPF(formData.cpf)) {
+        } else if (!validateCPF(formData.cpf)) {
             newErrors.cpf = "CPF inválido";
         }
 
@@ -154,7 +154,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
     };
 
     const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const maskedCpf = mascaraCPF(e.target.value);
+        const maskedCpf = maskCPF(e.target.value);
         handleInputChange('cpf', maskedCpf);
     };
 
