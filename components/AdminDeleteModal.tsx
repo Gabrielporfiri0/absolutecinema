@@ -60,6 +60,9 @@ export default function AdminDeleteModal({ adminID, onUpdatePage, shouldDisable 
                         setIsOpen(false);
                         router.push('/');
                         break;
+                    case 403:
+                        toast.error('Não é permitido excluir o admin padrão!');
+                        break;
                     case 404:
                         toast.error('Admin não encontrado!');
                         break;

@@ -26,6 +26,10 @@ export async function DELETE(
 
         if (!admin_) return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 })                       
 
+        const defaultAdmin = await adminsCollection.findOne({ name: "Administrador" })
+
+        if (admin_._id.toString() === defaultAdmin?._id.toString()) return NextResponse.json({ error: 'Não é permitido excluir o admin padrão!' }, { status: 403 })
+
         await adminsCollection.deleteOne({ _id: ObjectId.createFromHexString(id) })
 
         return NextResponse.json({ status: 204 })
