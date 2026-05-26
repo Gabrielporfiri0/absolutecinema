@@ -30,9 +30,6 @@ export default function Navbar() {
           <Link href="/#filmes" className="hover:text-red-500 transition-colors">
             Filmes
           </Link>
-          <Link href="/fale-conosco" className="hover:text-red-500 transition-colors">
-            Fale Conosco
-          </Link>
         </div>
 
         <div className="md:hidden">
