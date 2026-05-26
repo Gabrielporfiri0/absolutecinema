@@ -41,3 +41,8 @@ export type PostTicketSuccessResponse = {
     message: string,
     id: string
 }
+
+export type DeleteAllTicketsSuccessResponse = {
+    message: string,
+    ticketsDeleted: number
+}

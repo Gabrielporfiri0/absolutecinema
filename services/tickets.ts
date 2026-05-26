@@ -1,5 +1,6 @@
 import { localStorageUtil } from "@/lib/localStorage_";
 import { 
+    DeleteAllTicketsSuccessResponse,
     GetAllTicketsSuccessResponse, 
     GetTicketsSuccessResponse, 
     PostTicketSuccessResponse, 
@@ -59,6 +60,17 @@ export const ticketsService = {
     },
     create: async (dataToBeSent: TicketDataToBeSent) => {
         const response = await axios.post<PostTicketSuccessResponse>('/api/tickets/register', dataToBeSent)
+        return response
+    },
+    deleteAll: async () => {
+        const authorizationHeader = getAuthHeaders()
+        const response = await axios.get<DeleteAllTicketsSuccessResponse>('/api/tickets/deleteAll', {
+            headers: {
+                'Content-Type': 'application/json',
+                ...authorizationHeader
+            },
+        })
+
         return response
     }
 }

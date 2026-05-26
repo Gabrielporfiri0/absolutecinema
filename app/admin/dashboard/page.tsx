@@ -10,21 +10,35 @@ import { TicketApi } from "@/types/ticket";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Trash, X } from 'lucide-react';
 import HandleMovieInformations from "@/components/HandleMovieInformations";
 import { isAxiosError } from "axios";
 import { ticketsService } from "@/services/tickets";
 import { adminsService } from "@/services/admins";
+import { 
+    Dialog, 
+    DialogClose, 
+    DialogContent, 
+    DialogDescription, 
+    DialogFooter, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogTrigger 
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function Page() {
     const router = useRouter()
     const [activeTab, setActiveTab] = useState<'reservas' | 'admins' | 'movie'>('reservas'); // Controla qual aba está visível
 
+    const [isDeleteAllReservationModalOpen, setIsDeleteAllReservationModalOpen] = useState(false);
+
     const [loading, setLoading] = useState(true);
+    const [isProcessingTheExclusionOfAllReservations, setIsProcessingTheExclusionOfAllReservations] = useState(false);
     const [newAdminBeingRegistered, setNewAdminBeingRegistered] = useState(false);
     const [busca, setBusca] = useState('');
 
-    const [reservas, setReservas] = useState<TicketApi[]>([]);
+    const [reservations, setReservations] = useState<TicketApi[]>([]);
     const [admins, setAdmins] = useState<AdminUser[]>([]);
 
     const [newAdminUser, setNewAdminUser] = useState<string>('');
@@ -37,9 +51,9 @@ export default function Page() {
         setShowPassword(!showPassword);
     };
 
-    const reservasFiltradas = reservas.filter((reserva) =>
-        reserva.cpf.includes(busca) ||
-        reserva.name.toLowerCase().includes(busca.toLowerCase())
+    const filteredReservations = reservations.filter((reservation) =>
+        reservation.cpf.includes(busca) ||
+        reservation.name.toLowerCase().includes(busca.toLowerCase())
     );
 
     const getAllReserves = async () => {
@@ -47,18 +61,17 @@ export default function Page() {
             const response = await ticketsService.getAll()
 
             if (response.status === 200) {
-                console.log('Resposta da API de Tickets no dashboard do admin: ', response.data)
-                setReservas(response.data.tickets__)
+                setReservations(response.data.tickets__)
             } else {
                 toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
             }
         } catch (error) {
             console.log('Erro ao buscar dados dos ingressos cadastrados: ', error)
 
-            if(isAxiosError(error) && error.response){
-                switch(error.response.status){
+            if (isAxiosError(error) && error.response) {
+                switch (error.response.status) {
                     case 401:
-                        toast.error('Sessão expirada, faça login novamente');
+                        toast.error('Sessão expirada, faça login novamente!');
                         localStorageUtil.removeItem('acessToken')
                         router.push('/')
                         break;
@@ -79,7 +92,7 @@ export default function Page() {
         try {
             const response = await adminsService.getAll()
 
-            if(response.status === 200){
+            if (response.status === 200) {
                 setAdmins(response.data.admin__)
             } else {
                 toast.error('Erro ao buscar dados dos admins cadastrados!!!');
@@ -87,10 +100,10 @@ export default function Page() {
         } catch (error) {
             console.log('Erro ao buscar dados dos admins cadastrados: ', error)
 
-            if(isAxiosError(error) && error.response){
-                switch(error.response.status){
+            if (isAxiosError(error) && error.response) {
+                switch (error.response.status) {
                     case 401:
-                        toast.error('Sessão expirada, faça login novamente');
+                        toast.error('Sessão expirada, faça login novamente!');
                         localStorageUtil.removeItem('acessToken')
                         router.push('/')
                         break;
@@ -192,7 +205,7 @@ export default function Page() {
             return
         }
 
-        if(newAdminUser.trim().length < 3 || newAdminUser.trim().length > 20) {
+        if (newAdminUser.trim().length < 3 || newAdminUser.trim().length > 20) {
             toast.error('O nome de usuário deve conter no mínimo 3 caracteres e no máximo 20!');
             setNewAdminBeingRegistered(false);
             return
@@ -210,7 +223,7 @@ export default function Page() {
                 password: newAdminPassword.trim()
             })
 
-            if(response.status === 201) {
+            if (response.status === 201) {
                 toast.success(`Administrador "${newAdminUser}" cadastrado com sucesso!`);
                 setNewAdminUser('')
                 setNewAdminPassword('')
@@ -223,8 +236,8 @@ export default function Page() {
         } catch (error) {
             console.log('Erro ao cadastrar novo admin: ', error)
 
-            if(isAxiosError(error) && error.response){
-                if(error.response.status === 401){
+            if (isAxiosError(error) && error.response) {
+                if (error.response.status === 401) {
                     toast.error('Sessão expirada, faça login novamente!');
                     setNewAdminBeingRegistered(false);
                     router.push('/')
@@ -234,11 +247,43 @@ export default function Page() {
                 } else {
                     toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!');
                 }
-            } else { 
+            } else {
                 toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!');
             }
         } finally {
             setNewAdminBeingRegistered(false);
+        }
+    }
+
+    const handleDeleteAllReservations = async () => {
+        setIsProcessingTheExclusionOfAllReservations(true);
+
+        try {
+            const response = await ticketsService.deleteAll()
+            if (response.status === 200) {
+                toast.success('Todas as reservas foram excluídas com sucesso!');
+                await getAllReserves();
+                setIsDeleteAllReservationModalOpen(false)
+            } else {
+                toast.error('Erro ao excluir todas as reservas, tente novamente mais tarde!');
+            }
+        } catch (error) {
+            console.log('Erro ao excluir todas as reservas: ', error)
+
+            if (isAxiosError(error) && error.response) {
+                if (error.response.status === 401) {
+                    toast.error('Sessão expirada, faça login novamente!');
+                    setIsProcessingTheExclusionOfAllReservations(false);
+                    router.push('/')
+                    return
+                } else {
+                    toast.error('Erro ao excluir todas as reservas, tente novamente mais tarde!');
+                }
+            } else {
+                toast.error('Erro ao excluir todas as reservas, tente novamente mais tarde!');
+            }
+        } finally {
+            setIsProcessingTheExclusionOfAllReservations(false);
         }
     }
 
@@ -286,7 +331,7 @@ export default function Page() {
                 {activeTab === 'reservas' && (
                     <>
                         <div className="bg-gray-900 p-6 rounded-lg shadow-lg mb-8 border border-gray-800">
-                            <label className="block text-sm font-medium text-gray-400 mb-2">Pesquisar Inscrito</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Pesquisar Reserva</label>
                             <input
                                 type="text"
                                 placeholder="Digite o CPF ou Nome..."
@@ -294,6 +339,103 @@ export default function Page() {
                                 onChange={(e) => setBusca(e.target.value)}
                                 className="w-full p-3 bg-black border border-gray-700 rounded text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
                             />
+
+                            <Dialog
+                                open={isDeleteAllReservationModalOpen}
+                                onOpenChange={(open) => {
+                                    if (!isProcessingTheExclusionOfAllReservations) {
+                                        setIsDeleteAllReservationModalOpen(open)
+                                    }
+                                }}
+                            >
+                                <DialogTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        className="mt-4 hover:cursor-pointer"
+                                        disabled={isProcessingTheExclusionOfAllReservations || reservations.length === 0}
+                                    >
+                                        <Trash size={16} />
+                                        {reservations.length > 0 ? `Excluir todas as reservas (${reservations.length})` : 'Nenhuma reserva para excluir'}
+                                    </Button>
+                                </DialogTrigger>
+
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogClose asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            disabled={isProcessingTheExclusionOfAllReservations}
+                                            className="absolute right-4 top-4 h-8 w-8 p-0 hover:cursor-pointer text-black"
+                                        >
+                                            <X size={18} />
+                                        </Button>
+                                    </DialogClose>
+
+                                    <DialogHeader>
+                                        <div className="flex items-center gap-3">
+                                            <div className="rounded-full bg-red-100 p-2">
+                                                <AlertTriangle
+                                                    size={22}
+                                                    className="text-red-600"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <DialogTitle className="text-red-600">
+                                                    Excluir todas as reservas
+                                                </DialogTitle>
+
+                                                <DialogDescription className="mt-1">
+                                                    Esta ação removerá todas as reservas cadastradas.
+                                                </DialogDescription>
+                                            </div>
+                                        </div>
+                                    </DialogHeader>
+
+                                    <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                        Esta ação é permanente e não poderá ser desfeita.
+                                    </div>
+
+                                    <DialogFooter className="mt-2">
+                                        <DialogClose asChild>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                disabled={isProcessingTheExclusionOfAllReservations}
+                                                className="text-black border-black hover:cursor-pointer"
+                                            >
+                                                Cancelar
+                                            </Button>
+                                        </DialogClose>
+
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            disabled={isProcessingTheExclusionOfAllReservations}
+                                            onClick={async () => {
+                                                await handleDeleteAllReservations()
+
+                                                setIsDeleteAllReservationModalOpen(false)
+                                            }}
+                                            className="hover:cursor-pointer"
+                                        >
+                                            {isProcessingTheExclusionOfAllReservations ? (
+                                                <>
+                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                    Excluindo...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Trash size={16} />
+                                                    Confirmar exclusão
+                                                </>
+                                            )}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
 
                         <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-800">
@@ -312,20 +454,20 @@ export default function Page() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-800 text-gray-300">
-                                            {reservasFiltradas.map((reserva) => (
-                                                <tr key={String(reserva._id)} className="hover:bg-gray-800/50">
-                                                    <td className="p-4 text-white">{reserva.name}</td>
-                                                    <td className="p-4 text-sm">{reserva.cpf}</td>
-                                                    <td className="p-4 text-sm">{reserva.seat}</td>
-                                                    <td className="p-4 text-sm">{formatUTCToBR(reserva.createdAt)}</td>
+                                            {filteredReservations.map((reservation) => (
+                                                <tr key={String(reservation._id)} className="hover:bg-gray-800/50">
+                                                    <td className="p-4 text-white">{reservation.name}</td>
+                                                    <td className="p-4 text-sm">{reservation.cpf}</td>
+                                                    <td className="p-4 text-sm">{reservation.seat}</td>
+                                                    <td className="p-4 text-sm">{formatUTCToBR(reservation.createdAt)}</td>
                                                     <td className="p-4 text-sm flex">
                                                         <TicketDeleteModal
-                                                            ticketID={String(reserva._id)}
+                                                            ticketID={String(reservation._id)}
                                                             onUpdatePage={handleUpdatePage}
                                                         />
 
                                                         <TicketUpdateModal
-                                                            ticketDataToBePossibleUpdated={reserva}
+                                                            ticketDataToBePossibleUpdated={reservation}
                                                             onUpdatePage={handleUpdatePage}
                                                         />
                                                     </td>
@@ -385,6 +527,7 @@ export default function Page() {
                                             placeholder="Defina uma senha"
                                             disabled={newAdminBeingRegistered}
                                         />
+
                                         <button
                                             type="button"
                                             onClick={togglePasswordVisibility}
