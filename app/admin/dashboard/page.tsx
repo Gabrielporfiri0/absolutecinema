@@ -72,7 +72,7 @@ export default function Page() {
                 switch (error.response.status) {
                     case 401:
                         toast.error('Sessão expirada, faça login novamente!');
-                        localStorageUtil.removeItem('acessToken')
+                        localStorageUtil.removeItem('accessToken')
                         router.push('/')
                         break;
                     case 500:
@@ -104,7 +104,7 @@ export default function Page() {
                 switch (error.response.status) {
                     case 401:
                         toast.error('Sessão expirada, faça login novamente!');
-                        localStorageUtil.removeItem('acessToken')
+                        localStorageUtil.removeItem('accessToken')
                         router.push('/')
                         break;
                     case 500:
@@ -135,7 +135,7 @@ export default function Page() {
 
             if (response.status === 200) {
 
-                const hasItWorked = localStorageUtil.removeItem('acessToken')
+                const hasItWorked = localStorageUtil.removeItem('accessToken')
 
                 if (!hasItWorked) {
                     toast.error('Erro ao realizar logout!, tente novamente mais tarde');
@@ -159,7 +159,7 @@ export default function Page() {
                 switch (error.response.status) {
                     case 401:
                         toast.error('Sessão expirada, faça login novamente!');
-                        localStorageUtil.removeItem('acessToken')
+                        localStorageUtil.removeItem('accessToken')
                         router.push('/')
                         break;
                     case 500:

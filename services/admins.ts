@@ -5,7 +5,7 @@ import axios from "axios";
 const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
 
 const getAuthHeaders = () => {
-    const cookie = localStorageUtil.getItem('acessToken')
+    const cookie = localStorageUtil.getItem('accessToken')
     if (!cookie) {
         throw new Error(NOT_FOUND_SESSION_ERROR_MESSAGE);
     }

@@ -67,7 +67,7 @@ export default function HandleMovieInformation() {
             } catch (error) {
                 if (isAxiosError(error) && error.response?.status === 401) {
                     toast.error("Erro, sessão expirada, faça login novamente!");
-                    localStorage.removeItem("acessToken");
+                    localStorage.removeItem("accessToken");
                     router.push("/");
                 } else {
                     toast.error("Erro desconhecido ao buscar dados do filme cadastrado, tente novamente mais tarde!");
@@ -203,7 +203,7 @@ export default function HandleMovieInformation() {
                         break;
                     case 401:
                         toast.error("Erro, sessão expirada, faça login novamente!");
-                        localStorage.removeItem("acessToken");
+                        localStorage.removeItem("accessToken");
                         router.push("/");
                         break;
                     case 404:

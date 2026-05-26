@@ -56,7 +56,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                         break;
                     case 401:
                         toast.error('Sessão expirada. Por favor, faça login novamente.');
-                        localStorageUtil.removeItem('acessToken');
+                        localStorageUtil.removeItem('accessToken');
                         setIsOpen(false)
                         setIsLoading(false)
                         router.push('/');

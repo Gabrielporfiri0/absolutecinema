@@ -125,7 +125,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             if(isAxiosError(error) && error.response) {
                 if(error.response.status === 401) {
                     toast.error('Sessão expirada. Por favor, faça login novamente.');
-                    localStorageUtil.removeItem('acessToken')
+                    localStorageUtil.removeItem('accessToken')
                     setIsOpen(false)
                     setIsLoading(false)
                     router.push('/')

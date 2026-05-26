@@ -52,7 +52,7 @@ export default function Page() {
             })
 
             if (response.status === 200) {
-                const tokenIsSet = localStorageUtil.setItem('acessToken', response.data.token || '')
+                const tokenIsSet = localStorageUtil.setItem('accessToken', response.data.token || '')
                 
                 if(tokenIsSet){
                     toast.success('Login realizado com sucesso!!!')

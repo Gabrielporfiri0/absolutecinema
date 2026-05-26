@@ -32,64 +32,6 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
         setIsLoading(true);
 
         try {
-            // const accessToken = localStorageUtil.getItem('acessToken');
-
-            // if (!accessToken) {
-            //     toast.error('Sessão expirada. Por favor, faça login novamente.');
-            //     localStorageUtil.clear();
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     router.push('/');
-            //     return;
-            // }
-
-            // const response = await fetch(`/api/admin/${adminID}`, {
-            //     method: 'DELETE',
-            //     headers: {
-            //         'Authorization': `Bearer ${accessToken}`,
-            //         'Content-Type': 'application/json',
-            //     }
-            // });
-
-            // const returnedResponse = await response.json();
-
-            // if (returnedResponse.status === 400) {
-            //     toast.error('ID inválido');
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     return;
-            // }
-
-            // if (returnedResponse.status === 401) {
-            //     toast.error('Token inválido, faça login novamente.');
-            //     localStorageUtil.clear();
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     router.push('/');
-            //     return;
-            // }
-
-            // if (returnedResponse.status === 404) {
-            //     toast.error('Admin não encontrado');
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     return;
-            // }
-
-            // if (returnedResponse.status === 500) {
-            //     toast.error('Erro ao deletar admin, tente novamente mais tarde');
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     return;
-            // }
-
-            // if (returnedResponse.status === 200) {
-            //     toast.success('Admin excluído com sucesso !!!');
-            //     setIsLoading(false);
-            //     setIsOpen(false);
-            //     if (onUpdatePage) onUpdatePage()
-            // }
-
             const response = await adminsService.delete(adminID)
 
             if (response.status === 200) {
@@ -97,6 +39,10 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
                 setIsLoading(false);
                 setIsOpen(false);
                 if (onUpdatePage) onUpdatePage()
+            } else {
+                toast.error('Erro ao excluir admin, tente novamente mais tarde!');
+                setIsLoading(false);
+                setIsOpen(false);
             }
         } catch (error) {
             console.log('Erro ao excluir admin:', error);
@@ -108,7 +54,7 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
                         break;
                     case 401:
                         toast.error('Sessão expirada, faça login novamente!');
-                        localStorageUtil.removeItem('acessToken');
+                        localStorageUtil.removeItem('accessToken');
                         setIsLoading(false);
                         setIsOpen(false);
                         router.push('/');
