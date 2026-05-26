@@ -59,7 +59,7 @@ export default function SeatPicker() {
       if (response.status === 200) {
         setSeatsReserved(response.data.seats__);
       } else {
-        console.log('Erro ao buscar dados dos assentos!');
+        console.log('Erro ao buscar dados dos assentos! Erro: ', response);
       }
     } catch (error) {
       console.log('Erro ao buscar dados de todos os assentos registrados: ', error);
@@ -94,26 +94,31 @@ export default function SeatPicker() {
 
     if (!name || !cpf) {
       toast.error('Por favor, preencha nome e CPF!');
+      setIsProcessingReservation(false);
       return;
     }
 
     if (!validateCPF(cpf)) {
       toast.error('CPF Inválido! Por favor verifique o número!');
+      setIsProcessingReservation(false);
       return;
     }
 
     if (name.trim().length === 0) {
       toast.error('Nome não pode ser vazio!');
+      setIsProcessingReservation(false);
       return;
     }
 
     if (name.trim().length >= 50) {
       toast.error('Nome muito longo! Por favor, use um nome com até 50 caracteres!');
+      setIsProcessingReservation(false);
       return;
     }
 
     if (seatSelected === undefined) {
       toast.error('Por favor, selecione pelo menos um assento para reservar!');
+      setIsProcessingReservation(false);
       return;
     }
 

@@ -23,7 +23,6 @@ export async function connectToBD(): Promise<Db>{
     await createDefaultAdmin(db)
 
     return db
-    // return client.db('Admins')
 }
 
 export async function getAdminsCollection(){
@@ -47,7 +46,5 @@ async function createDefaultAdmin(db: Db) {
             createdAt: new Date(),
             updatedAt: new Date()
         })
-
-        console.log("Admin padrão criado")
     }
 }

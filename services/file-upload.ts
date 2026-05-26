@@ -22,8 +22,6 @@ export const fileUploadService = {
       } 
     });
 
-    console.log('SIG, UPLOAD IMAGE: ', sig)
-
     const { timestamp, signature, apiKey, cloudName, folder } = sig.data;
 
     const formData = new FormData();
@@ -32,8 +30,6 @@ export const fileUploadService = {
     formData.append("timestamp", timestamp);
     formData.append("signature", signature);
     formData.append("folder", folder);
-
-    console.log('FORM DATA, UPLOAD IMAGE: ', cloudName)
 
     const upload = await axios.post(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -46,7 +42,6 @@ export const fileUploadService = {
 
     return optimizedUrl;
   },
-
   deleteImage: async (imageUrl: string) => {
     const authorizationHeader = getAuthHeaders()
 

@@ -41,17 +41,17 @@ export const MovieSchema = z.object({
         .min(1, { message: 'Ao menos 1 caractere' })
         .max(50, { message: 'No máximo 50 caracteres' })
         .transform(value => value.trim())
-        .refine(value => value.length > 0 , { message: 'Campo não pode ser vazio após remover espaços' }),
+        .refine(value => value.length > 0 , { message: 'Campo não pode ser vazio após remover espaços em branco' }),
     movie_genre: z.string()
         .min(1, { message: 'Ao menos 1 caractere' })
         .max(30, { message: 'No máximo 30 caracteres' })
         .transform(value => value.trim())
-        .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços' }),
+        .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços em branco' }),
     synopsis: z.string()
         .min(1, { message: 'Ao menos 1 caractere' })
-        .max(500, { message: 'No máximo 500 caracteres' })
+        .max(1000, { message: 'No máximo 1000 caracteres' })
         .transform(value => value.trim())
-        .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços' }),
+        .refine(value => value.length > 0, { message: 'Campo não pode ser vazio após remover espaços em branco' }),
     duration: z.string().min(4, { message: 'Precisa estar no formato: HH:MM' }).max(5, { message: 'Precisa estar no formato: HH:MM' }),
     session_date: z.string().min(10, { message: 'Precisa estar no formato: DD/MM/AAAA' }).max(10, { message: 'Precisa estar no formato: DD/MM/AAAA' }),
     session_time: z.string().min(4, { message: 'Precisa estar no formato: HH:MM' }).max(5, { message: 'Precisa estar no formato: HH:MM' }),

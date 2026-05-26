@@ -112,7 +112,7 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-      <div className="relative w-full max-w-3xl bg-gradient-to-b from-indigo-900/90 via-gray-800/70 to-black/80 rounded-xl border border-white/5 p-6 shadow-2xl">
+      <div className="relative w-full max-w-3xl bg-linear-to-b from-indigo-900/90 via-gray-800/70 to-black/80 rounded-xl border border-white/5 p-6 shadow-2xl">
         <h3 className="text-center text-2xl font-semibold text-white mb-4">Assista o vídeo abaixo para concluir a reserva</h3>
 
         <div className="mx-auto w-full max-w-2xl aspect-video bg-black rounded-md overflow-hidden border border-white/10 p-2">
@@ -133,7 +133,7 @@ export default function VideoWatchModal({ open, onClose, onComplete, videoSrc }:
         </div>
 
         <div className="mt-4">
-          <p className="mx-auto max-w-2xl text-center text-sm leading-relaxed text-gray-200/90 bg-gradient-to-r from-indigo-800/40 via-gray-700/20 to-black/0 px-4 py-3 rounded-lg border border-white/5 shadow-inner">
+          <p className="mx-auto max-w-2xl text-center text-sm leading-relaxed text-gray-200/90 bg-linear-to-r from-indigo-800/40 via-gray-700/20 to-black/0 px-4 py-3 rounded-lg border border-white/5 shadow-inner">
             <strong className="block text-lg text-white font-semibold mb-1">Importante — assista até o fim</strong>
             O vídeo precisa ser assistido completamente para concluir a validação. Assim que o playback terminar você será redirecionado automaticamente para a seleção de assentos.
           </p>

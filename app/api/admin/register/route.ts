@@ -39,7 +39,7 @@ export async function POST(request: NextRequest){
 
         return NextResponse.json({ message: 'Novo admin cadastrado com sucesso', id: String(response.insertedId) }, { status: 201 })
     }catch(error){
-        console.log('Erro ao registrar novo admin !!!')
+        console.log('Erro ao registrar novo admin: ', error)
         return NextResponse.json({ error: 'Erro interno no servidor ao tentar registrar novo admin!' }, { status: 500 })
     }
 }

@@ -22,11 +22,12 @@ import { ticketsService } from "@/services/tickets";
 import { isAxiosError } from "axios";
 
 interface Props {
-    ticketDataToBePossibleUpdated: TicketApi,
-    onUpdatePage?: () => void
+    ticketDataToBePossibleUpdated: TicketApi;
+    onUpdatePage?: () => void;
+    shouldDisable?: boolean;
 }
 
-export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpdatePage }: Props) {
+export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpdatePage, shouldDisable }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -63,8 +64,8 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             newErrors.name = "Nome é obrigatório";
         }
 
-        if (formData.name.trim().length < 2 || formData.name.trim().length > 100) {
-            newErrors.name = "Nome deve conter entre 2 e 100 caracteres";
+        if (formData.name.trim().length < 2 || formData.name.trim().length > 50) {
+            newErrors.name = "Nome deve conter entre 2 e 50 caracteres";
         }
 
         if (!formData.cpf.trim()) {
@@ -85,18 +86,20 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        setIsLoading(true);
 
         if (!hasChanges()) {
-            toast.warning('Não houve alterações nos dados para atualização');
+            toast.warning('Não houve alterações nos dados para atualização!');
+            setIsLoading(false);
             setIsOpen(false);
             return;
         }
 
         if (!validateForm()) {
+            setIsLoading(false);
             return;
         }
-
-        setIsLoading(true);
 
         try {
             const ticketData: Ticket = {
@@ -111,8 +114,8 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
 
             if (response.status === 200) {
                 toast.success('Reserva atualizada com sucesso!!!');
-                setIsOpen(false)
                 setIsLoading(false)
+                setIsOpen(false)
 
                 if (onUpdatePage) onUpdatePage()
             } else {
@@ -124,10 +127,10 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
 
             if(isAxiosError(error) && error.response) {
                 if(error.response.status === 401) {
-                    toast.error('Sessão expirada. Por favor, faça login novamente.');
+                    toast.error('Sessão expirada. Por favor, faça login novamente!');
                     localStorageUtil.removeItem('accessToken')
-                    setIsOpen(false)
                     setIsLoading(false)
+                    setIsOpen(false)
                     router.push('/')
                     return
                 }
@@ -165,6 +168,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                     variant="ghost"
                     size="sm"
                     className="hover:bg-gray-200 hover:cursor-pointer w-9 h-9 p-0"
+                    disabled={shouldDisable}
                 >
                     <SquarePen size={18} />
                 </Button>

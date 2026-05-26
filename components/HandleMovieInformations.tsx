@@ -60,9 +60,9 @@ export default function HandleMovieInformation() {
                         photo: movie.photo,
                     });
                 } else if (response.status === 200 && response.data.movies__.length === 0) {
-                    toast.error("Nenhum filme cadastrado ainda, preencha os dados para criar o primeiro!");
+                    toast.error("Ainda não há um filme em cartaz, preencha os dados para criar um!");
                 } else {
-                    toast.error("Erro desconhecido ao buscar dados do filme cadastrado, tente novamente mais tarde!");
+                    toast.error("Erro desconhecido ao buscar dados do filme em cartaz, tente novamente mais tarde!");
                 }
             } catch (error) {
                 if (isAxiosError(error) && error.response?.status === 401) {
@@ -70,7 +70,7 @@ export default function HandleMovieInformation() {
                     localStorage.removeItem("accessToken");
                     router.push("/");
                 } else {
-                    toast.error("Erro desconhecido ao buscar dados do filme cadastrado, tente novamente mais tarde!");
+                    toast.error("Erro desconhecido ao buscar dados do filme em cartaz, tente novamente mais tarde!");
                 }
             }
         }
@@ -148,7 +148,7 @@ export default function HandleMovieInformation() {
                     const removed = await removeImage(initialMovieData.photo);
 
                     if (!removed) {
-                        toast.error("Erro ao remover imagem antiga, tente novamente mais tarde.");
+                        toast.error("Erro ao tentar remover imagem do pôster antigo, tente novamente mais tarde.");
                         return;
                     }
                 }
@@ -156,7 +156,7 @@ export default function HandleMovieInformation() {
                 const uploaded = await uploadNewImage();
 
                 if (!uploaded) {
-                    toast.error("Erro ao fazer upload da imagem, tente novamente mais tarde.");
+                    toast.error("Erro ao fazer upload do novo pôster, tente novamente mais tarde.");
                     return;
                 }
 
@@ -187,13 +187,13 @@ export default function HandleMovieInformation() {
             });
 
             if (response.status === 201) {
-                toast.success("Dados do filme em cartaz criados com sucesso!");
+                toast.success("Dados do filme em cartaz atualizados com sucesso!");
 
                 reset();
                 setSelectedFile(null);
                 router.push('/')
             } else {
-                toast.error("Erro ao criar dados do filme em cartaz, tente novamente mais tarde.");
+                toast.error("Erro ao atualizar dados do filme em cartaz, tente novamente mais tarde.");
             }
         } catch (error) {
             if (isAxiosError(error) && error.response) {
@@ -207,16 +207,17 @@ export default function HandleMovieInformation() {
                         router.push("/");
                         break;
                     case 404:
-                        toast.error("Erro, filme não encontrado com ID fornecido!");
+                        toast.error("Erro, dados do filme em cartaz não encontrados com o ID fornecido!");
                         break;
                     case 422:
-                        toast.error("Erro, ID inválido ou já existe um filme cadastrado!");
+                        toast.error("Erro, ID inválido ou já existe um filme em cartazcom dados cadastrados!");
                         break;
                     case 500:
                         toast.error("Erro interno do servidor, tente novamente mais tarde!");
                         break;
                     default:
-                        toast.error(`Erro desconhecido ao ${initialMovieData ? "atualizar" : "criar"} filme, tente novamente mais tarde!`);
+                        toast.error(`Erro desconhecido ao atualizar dados do filme em cartaz, tente novamente mais tarde!`);
+                        break;
                 }
             } else {
                 toast.error("Erro desconhecido ao processar a solicitação, tente novamente mais tarde!");
@@ -320,7 +321,7 @@ export default function HandleMovieInformation() {
             
             <div className="space-y-1.5">
                 <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
-                    Data da sessão (DD/MM/AAAA) <span className="text-rose-400">*</span>
+                    Data da exibição do filme (DD/MM/AAAA) <span className="text-rose-400">*</span>
                 </label>
 
                 <Input
@@ -342,7 +343,7 @@ export default function HandleMovieInformation() {
 
             <div className="space-y-1.5">
                 <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
-                    Horário da sessão (HH:MM) <span className="text-rose-400">*</span>
+                    Horário da exibição do filme (HH:MM) <span className="text-rose-400">*</span>
                 </label>
 
                 <Input

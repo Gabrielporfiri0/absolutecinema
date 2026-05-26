@@ -21,9 +21,10 @@ import { isAxiosError } from "axios";
 interface Props {
     ticketID: string;
     onUpdatePage?: () => void;
+    shouldDisable?: boolean;
 }
 
-export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
+export default function TicketDeleteModal({ ticketID, onUpdatePage, shouldDisable }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -55,10 +56,10 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                         toast.error('Erro: ID da reserva inválido!');
                         break;
                     case 401:
-                        toast.error('Sessão expirada. Por favor, faça login novamente.');
+                        toast.error('Sessão expirada. Por favor, faça login novamente!');
                         localStorageUtil.removeItem('accessToken');
-                        setIsOpen(false)
                         setIsLoading(false)
+                        setIsOpen(false)
                         router.push('/');
                         break;
                     case 404:
@@ -86,6 +87,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                     variant="ghost"
                     size="sm"
                     className="hover:bg-red-50 hover:text-red-600 hover:cursor-pointer w-9 h-9 p-0 text-red-500"
+                    disabled={shouldDisable}
                 >
                     <Trash size={18} />
                 </Button>

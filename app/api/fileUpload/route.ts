@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
             folder: "movies"
         }, { status: 201 });
     } catch(error){
-        console.log("Erro ao gerar assinatura para upload de imagem: ", error);
         return NextResponse.json({
             error: 'Erro interno no servidor ao realizar POST para upload de imagem',
         }, { status: 500 })

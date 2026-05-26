@@ -30,8 +30,8 @@ export async function DELETE(
 
         return NextResponse.json({ status: 204 })
     } catch (error) {
-        console.log('Erro ao deletar admin: ', error)
-        return NextResponse.json({ error: 'Erro ao deletar admin' }, { status: 500 })
+        console.log('Erro ao excluir admin: ', error)
+        return NextResponse.json({ error: 'Erro ao excluir admin' }, { status: 500 })
     }
 }
 
@@ -124,7 +124,7 @@ export async function GET(
             data_: adminExists,
         }, { status: 200 })
     } catch (error) {
-        console.log('Erro ao buscar dados de admin !!!')
-        return NextResponse.json({ error: 'Erro ao tentar buscar dados de admin' }, { status: 500 })
+        console.log('Erro ao buscar dados do admin: ', error)
+        return NextResponse.json({ error: 'Erro ao tentar buscar dados do admin' }, { status: 500 })
     }
 }

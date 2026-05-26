@@ -22,12 +22,12 @@ export default function Page() {
         setIsProcessingLogin(true)
 
         if(!userName || !userPassword){
-            toast.error('Por favor, informe usuário e senha')
+            toast.error('Por favor, informe usuário e senha!')
             setIsProcessingLogin(false)
             return
         }
 
-        if(userName.trim() === '' || userPassword.trim() === '') {
+        if(userName.trim().length === 0 || userPassword.trim().length === 0) {
             toast.error('Usuário e senha não podem conter apenas espaços em branco!')
             setIsProcessingLogin(false)
             return
@@ -77,12 +77,12 @@ export default function Page() {
                     setIsProcessingLogin(false)
                     return
                 } else {
-                    toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
+                    toast.error('Erro ao tentar logar admin, tente novamente mais tarde!');
                     setIsProcessingLogin(false)
                     return
                 }
             } else {
-                toast.error('Erro ao tentar logar admin, tente novamente mais tarde');
+                toast.error('Erro ao tentar logar admin, tente novamente mais tarde!');
                 setIsProcessingLogin(false)
                 return
             }

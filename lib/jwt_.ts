@@ -16,7 +16,6 @@ export async function generateToken(payload: any){
 
 export async function verifyToken(token__: string){
     try {
-        // console.log('TOKEN RECEBIDO NA VERIFICAÇÃO: ', token__)
         const { payload } = await jwtVerify(token__, secretKey);
         return {
             valid: true,
@@ -24,7 +23,6 @@ export async function verifyToken(token__: string){
             decoded: payload
         };
     } catch (error: any) {
-        console.log('Erro na verificação do token:', error.message);
         return {
             valid: false,
             expired: error.code === 'ERR_JWT_EXPIRED',

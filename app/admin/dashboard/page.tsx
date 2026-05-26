@@ -15,15 +15,15 @@ import HandleMovieInformations from "@/components/HandleMovieInformations";
 import { isAxiosError } from "axios";
 import { ticketsService } from "@/services/tickets";
 import { adminsService } from "@/services/admins";
-import { 
-    Dialog, 
-    DialogClose, 
-    DialogContent, 
-    DialogDescription, 
-    DialogFooter, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogTrigger 
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -63,10 +63,10 @@ export default function Page() {
             if (response.status === 200) {
                 setReservations(response.data.tickets__)
             } else {
-                toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
+                toast.error('Erro ao buscar dados das reservas feitas!!!');
             }
         } catch (error) {
-            console.log('Erro ao buscar dados dos ingressos cadastrados: ', error)
+            console.log('Erro ao buscar dados das reservas feitas: ', error)
 
             if (isAxiosError(error) && error.response) {
                 switch (error.response.status) {
@@ -76,14 +76,14 @@ export default function Page() {
                         router.push('/')
                         break;
                     case 500:
-                        toast.error('Erro no servidor ao buscar dados dos ingressos cadastrados, tente novamente mais tarde!');
+                        toast.error('Erro no servidor ao buscar dados das reservas feitas, tente novamente mais tarde!');
                         break;
                     default:
-                        toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
+                        toast.error('Erro ao buscar dados das reservas feitas!!!');
                         break;
                 }
             } else {
-                toast.error('Erro ao buscar dados dos ingressos cadastrados!!!');
+                toast.error('Erro ao buscar dados das reservas feitas!!!');
             }
         }
     }
@@ -138,17 +138,17 @@ export default function Page() {
                 const hasItWorked = localStorageUtil.removeItem('accessToken')
 
                 if (!hasItWorked) {
-                    toast.error('Erro ao realizar logout!, tente novamente mais tarde');
+                    toast.error('Erro ao realizar logout, tente novamente mais tarde!');
                     setIsProcessingLogout(false);
                     return
                 }
 
-                toast.success('Logout realizado com sucesso!!!');
+                toast.success('Você saiu com sucesso!!!');
                 setIsProcessingLogout(false);
                 router.push('/')
                 return
             } else {
-                toast.error('Erro ao realizar logout, tente novamente mais tarde');
+                toast.error('Erro ao realizar logout, tente novamente mais tarde!');
                 setIsProcessingLogout(false);
                 return
             }
@@ -159,6 +159,7 @@ export default function Page() {
                 switch (error.response.status) {
                     case 401:
                         toast.error('Sessão expirada, faça login novamente!');
+                        setIsProcessingLogout(false);
                         localStorageUtil.removeItem('accessToken')
                         router.push('/')
                         break;
@@ -227,7 +228,7 @@ export default function Page() {
                 toast.success(`Administrador "${newAdminUser}" cadastrado com sucesso!`);
                 setNewAdminUser('')
                 setNewAdminPassword('')
-                getAllAdmins()
+                await getAllAdmins()
                 setNewAdminBeingRegistered(false);
                 return
             } else {
@@ -260,6 +261,7 @@ export default function Page() {
 
         try {
             const response = await ticketsService.deleteAll()
+
             if (response.status === 200) {
                 toast.success('Todas as reservas foram excluídas com sucesso!');
                 await getAllReserves();
@@ -296,10 +298,11 @@ export default function Page() {
                         <h1 className="text-3xl font-bold text-red-600">Painel Administrativo</h1>
                         <p className="text-gray-400">Bem-vindo</p>
                     </div>
+                    
                     <button
                         onClick={handleLogout}
                         className="bg-red-900/50 hover:cursor-pointer hover:bg-red-900 text-red-200 px-4 py-2 rounded border border-red-800 transition"
-                        disabled={isProcessingLogout}
+                        disabled={isProcessingLogout || isProcessingTheExclusionOfAllReservations}
                     >
                         Sair
                     </button>
@@ -309,6 +312,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('reservas')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'reservas' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
                     >
                         Gerenciar Reservas
                     </button>
@@ -316,6 +320,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('admins')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'admins' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
                     >
                         Gerenciar Administradores
                     </button>
@@ -323,6 +328,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('movie')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'movie' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
                     >
                         Gerenciar Filme em cartaz
                     </button>
@@ -338,12 +344,13 @@ export default function Page() {
                                 value={busca}
                                 onChange={(e) => setBusca(e.target.value)}
                                 className="w-full p-3 bg-black border border-gray-700 rounded text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                                disabled={loading || reservations.length === 0 || isProcessingTheExclusionOfAllReservations || isProcessingLogout}
                             />
 
                             <Dialog
                                 open={isDeleteAllReservationModalOpen}
                                 onOpenChange={(open) => {
-                                    if (!isProcessingTheExclusionOfAllReservations) {
+                                    if (!isProcessingTheExclusionOfAllReservations && !isProcessingLogout) {
                                         setIsDeleteAllReservationModalOpen(open)
                                     }
                                 }}
@@ -352,8 +359,8 @@ export default function Page() {
                                     <Button
                                         type="button"
                                         variant="destructive"
-                                        className="mt-4 hover:cursor-pointer"
-                                        disabled={isProcessingTheExclusionOfAllReservations || reservations.length === 0}
+                                        className="mt-4 hover:cursor-pointer hover:bg-white hover:text-red-600 border-red-600 text-white"
+                                        disabled={isProcessingTheExclusionOfAllReservations || reservations.length === 0 || isProcessingLogout || loading}
                                     >
                                         <Trash size={16} />
                                         {reservations.length > 0 ? `Excluir todas as reservas (${reservations.length})` : 'Nenhuma reserva para excluir'}
@@ -449,7 +456,6 @@ export default function Page() {
                                                 <th className="p-4 border-b border-gray-800">Nome</th>
                                                 <th className="p-4 border-b border-gray-800">CPF</th>
                                                 <th className="p-4 border-b border-gray-800">Cadeira</th>
-                                                <th className="p-4 border-b border-gray-800">Data</th>
                                                 <th className="p-4 border-b border-gray-800">Ações</th>
                                             </tr>
                                         </thead>
@@ -459,16 +465,17 @@ export default function Page() {
                                                     <td className="p-4 text-white">{reservation.name}</td>
                                                     <td className="p-4 text-sm">{reservation.cpf}</td>
                                                     <td className="p-4 text-sm">{reservation.seat}</td>
-                                                    <td className="p-4 text-sm">{formatUTCToBR(reservation.createdAt)}</td>
                                                     <td className="p-4 text-sm flex">
                                                         <TicketDeleteModal
                                                             ticketID={String(reservation._id)}
                                                             onUpdatePage={handleUpdatePage}
+                                                            shouldDisable={isProcessingTheExclusionOfAllReservations || isProcessingLogout}
                                                         />
 
                                                         <TicketUpdateModal
                                                             ticketDataToBePossibleUpdated={reservation}
                                                             onUpdatePage={handleUpdatePage}
+                                                            shouldDisable={isProcessingTheExclusionOfAllReservations || isProcessingLogout}
                                                         />
                                                     </td>
                                                 </tr>
@@ -495,6 +502,7 @@ export default function Page() {
                                         <AdminDeleteModal
                                             adminID={String(admin._id)}
                                             onUpdatePage={handleUpdatePage}
+                                            shouldDisable={newAdminBeingRegistered}
                                         />
                                     </li>
                                 ))}
@@ -532,11 +540,13 @@ export default function Page() {
                                             type="button"
                                             onClick={togglePasswordVisibility}
                                             className="hover:cursor-pointer"
+                                            disabled={newAdminBeingRegistered}
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
                                 </div>
+                                
                                 <button
                                     type="submit"
                                     className="w-full hover:cursor-pointer bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded transition"

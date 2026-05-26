@@ -4,7 +4,6 @@ import Image from 'next/image';
 import ReserveButtonGuard from '@/components/ReserveButtonGuard';
 import { useEffect, useState } from 'react';
 import { movieService } from '@/services/movie';
-import { toast } from 'sonner';
 import { Movies } from '@/types/movies';
 
 function formatDateBR(date: string) {
@@ -28,13 +27,11 @@ export default function HomePage() {
           const movie = response.data.movies__[0];
 
           setMovieData(movie);
-        } else if (response.status === 200 && response.data.movies__.length === 0) {
-          toast.error("Nenhum filme em cartaz no momento, por favor volte mais tarde para conferir as novidades!");
-        } else {
-          toast.error("Erro desconhecido ao buscar dados do filme em cartaz, tente novamente mais tarde!");
         }
+
+        console.log('Erro ao buscar dados do filme em cartaz, resposta da API: ', response);
       } catch (error) {
-        toast.error("Erro desconhecido ao buscar dados do filme em cartaz, tente novamente mais tarde!");
+        console.log("Erro desconhecido ao buscar dados do filme em cartaz: ", error);
       }
     }
 

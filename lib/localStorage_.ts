@@ -7,7 +7,6 @@ export const localStorageUtil = {
                 window.localStorage.setItem(key, value)
                 return true
             }catch(error){
-                console.log('Erro ao salvar no local storage')
                 return false
             }
         }
@@ -22,7 +21,6 @@ export const localStorageUtil = {
                 if(item) return item
                 return null
             }catch(error){
-                console.log(`Erro ao ler ${key} do local storage: `, error)
                 return null
             }
         }
@@ -35,7 +33,6 @@ export const localStorageUtil = {
                 window.localStorage.removeItem(key)
                 return true
             }catch(error){
-                console.log(`Erro ao remover ${key} do local storage: `, error)
                 return false
             }
         }
@@ -48,7 +45,6 @@ export const localStorageUtil = {
                 window.localStorage.clear()
                 return true
             }catch(error){
-                console.log('Erro ao limpar local storage: ', error)
                 return false
             }
         }

@@ -21,9 +21,10 @@ import { isAxiosError } from "axios";
 interface Props {
     adminID: string;
     onUpdatePage?: () => void;
+    shouldDisable?: boolean;
 }
 
-export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
+export default function AdminDeleteModal({ adminID, onUpdatePage, shouldDisable }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -84,6 +85,7 @@ export default function AdminDeleteModal({ adminID, onUpdatePage }: Props) {
                     variant="ghost"
                     size="sm"
                     className="hover:bg-red-50 hover:text-red-600 hover:cursor-pointer w-9 h-9 p-0 text-red-500"
+                    disabled={shouldDisable}
                 >
                     <Trash size={18} />
                 </Button>
