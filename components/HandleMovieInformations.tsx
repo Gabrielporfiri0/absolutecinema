@@ -242,7 +242,7 @@ export default function HandleMovieInformation() {
                     disabled={isSubmitting}
                     className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
                    transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
-                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base selection:bg-blue-700 selection:text-white"
                 />
 
                 {errors.title && (
@@ -264,7 +264,7 @@ export default function HandleMovieInformation() {
                     disabled={isSubmitting}
                     className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
                    transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
-                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                   disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base selection:bg-blue-700 selection:text-white"
                 />
 
                 {errors.movie_genre && (
@@ -309,7 +309,7 @@ export default function HandleMovieInformation() {
                     disabled={isSubmitting}
                     className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
                    transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
-                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base selection:bg-blue-700 selection:text-white"
                 />
 
                 {errors.duration && (
@@ -331,7 +331,7 @@ export default function HandleMovieInformation() {
                     disabled={isSubmitting}
                     className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
                    transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
-                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base selection:bg-blue-700 selection:text-white"
                 />
 
                 {errors.session_date && (
@@ -353,7 +353,7 @@ export default function HandleMovieInformation() {
                     disabled={isSubmitting}
                     className="w-full bg-zinc-900/70 border-zinc-600 text-white placeholder:text-zinc-400 rounded-xl 
                    transition focus:ring-2 focus:ring-purple-500 focus:border-purple-500 
-                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base"
+                   disabled:opacity-50 disabled:cursor-not-allowed scheme-dark text-sm sm:text-base selection:bg-blue-700 selection:text-white"
                 />
 
                 {errors.session_time && (
