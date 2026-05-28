@@ -528,12 +528,12 @@ export default function Page() {
                                 </div>
                                 <div>
                                     <label className="block text-sm text-gray-400 mb-1">Senha de Acesso</label>
-                                    <div className="flex gap-2">
+                                    <div className="relative">
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={newAdminPassword}
                                             onChange={(e) => setNewAdminPassword(e.target.value)}
-                                            className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
+                                            className="w-full p-2 pr-12 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
                                             placeholder="Defina uma senha"
                                             disabled={newAdminBeingRegistered}
                                         />
@@ -541,7 +541,7 @@ export default function Page() {
                                         <button
                                             type="button"
                                             onClick={togglePasswordVisibility}
-                                            className="hover:cursor-pointer"
+                                            className="hover:cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                                             disabled={newAdminBeingRegistered}
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
