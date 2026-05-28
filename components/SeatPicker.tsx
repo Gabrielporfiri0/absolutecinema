@@ -1,11 +1,16 @@
 'use client';
 
-import { maskCPF, validateCPF } from '@/lib/cpfUtils';
 import { ticketsService } from '@/services/tickets';
-import { TicketDataToBeSent } from '@/types/ticket';
+import { ReservationFormData, ReservationSchema, TicketDataToBeSent } from '@/types/ticket';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { maskPhone } from '@/utils/masks';
+import { Button } from './ui/button';
 
 const initialLayout = [
   ['l', 'l', 'l', 'l', 'l', 'l', 'l', '1', 'l', 'l', 'l', 'l', 'l', 'l'],
@@ -43,10 +48,23 @@ const seatsMap = generateMapSeats();
 
 export default function SeatPicker() {
   const [seatSelected, setSeatSelected] = useState<number>();
-  const [name, setName] = useState('');
-  const [cpf, setCpf] = useState('');
   const [seatsReserved, setSeatsReserved] = useState<number[]>([]);
-  const [isProcessingReservation, setIsProcessingReservation] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    reset,
+  } = useForm<ReservationFormData>({
+    resolver: zodResolver(ReservationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      seat: 1,
+      phone: "",
+    },
+  });
 
   useEffect(() => {
     getSeatsThatAreReserved();
@@ -66,98 +84,27 @@ export default function SeatPicker() {
     }
   };
 
-  const handleChangeCpf = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCpf(maskCPF(e.target.value));
-  };
-
   const handleSeatClick = (seatNumber: number) => {
     if (seatsReserved.includes(seatNumber)) {
       toast.warning('Este assento já está reservado!');
+      setValue('seat', 0);
+      setSeatSelected(undefined);
       return;
     }
 
     if (seatSelected === seatNumber) {
       setSeatSelected(undefined);
+      setValue('seat', 0);
     } else {
       if (seatSelected !== undefined) {
         toast.error('Só é possível reservar 1 assento por vez, para reservar mais assentos, finalize a reserva atual e inicie uma nova reserva!');
+        setValue('seat', 0);
+        // setSeatSelected(undefined);
         return;
       }
 
       setSeatSelected(seatNumber);
-    }
-  };
-
-  const handleCreateReservation = async (e: React.FormEvent) => {
-    setIsProcessingReservation(true);
-    e.preventDefault();
-
-    if (!name || !cpf) {
-      toast.error('Por favor, preencha nome e CPF!');
-      setIsProcessingReservation(false);
-      return;
-    }
-
-    if (!validateCPF(cpf)) {
-      toast.error('CPF Inválido! Por favor verifique o número!');
-      setIsProcessingReservation(false);
-      return;
-    }
-
-    if (name.trim().length === 0) {
-      toast.error('Nome não pode ser vazio!');
-      setIsProcessingReservation(false);
-      return;
-    }
-
-    if (name.trim().length >= 50) {
-      toast.error('Nome muito longo! Por favor, use um nome com até 50 caracteres!');
-      setIsProcessingReservation(false);
-      return;
-    }
-
-    if (seatSelected === undefined) {
-      toast.error('Por favor, selecione pelo menos um assento para reservar!');
-      setIsProcessingReservation(false);
-      return;
-    }
-
-    try {
-      const newReservation: TicketDataToBeSent = {
-        name: name.trim(),
-        cpf: cpf,
-        seat: seatSelected.toString() // Converte para string pois a api espera string
-      };
-
-      const response = await ticketsService.create(newReservation);
-
-      if (response.status === 201) {
-        toast.success(`Assento de número ${seatSelected} reservado com sucesso!`);
-      } else {
-        toast.error(`Erro ao reservar assento ${seatSelected}, tente novamente mais tarde!`);
-      }
-
-      await getSeatsThatAreReserved();
-
-      setSeatSelected(undefined);
-      setName('');
-      setCpf('');
-    } catch (error) {
-      console.log('Erro ao enviar reserva:', error);
-
-      if(isAxiosError(error) && error.response) {
-        if(error.response.data && error.response.data.error) {
-          toast.error(`Não foi possível reservar o assento ${seatSelected}: ${error.response.data.error}`);
-          return;
-        } else {
-          toast.error(`Erro ao reservar assento ${seatSelected}, tente novamente mais tarde!`);
-          return;
-        }
-      } else {
-        toast.error('Erro ao realizar reserva, tente novamente mais tarde!');
-      }
-    } finally {
-      setIsProcessingReservation(false);
+      setValue('seat', seatNumber);
     }
   };
 
@@ -172,6 +119,47 @@ export default function SeatPicker() {
     const seatInfo = seatsMap.find(a => a.row === row && a.seat === seat);
     return seatInfo ? seatInfo.number : 0;
   };
+
+  const onSubmit = async (data: ReservationFormData) => {
+    if (seatSelected === undefined) {
+      toast.error('Por favor, selecione um assento para reservar!');
+      return;
+    }
+
+    try {
+      const reservationData: TicketDataToBeSent = {
+        name: data.name.trim(),
+        email: data.email.trim(),
+        seat: data.seat.toString(),
+        phone: data.phone.trim()
+      };
+
+      const response = await ticketsService.create(reservationData);
+
+      if (response.status === 201) {
+        toast.success(`Assento de número ${seatSelected} reservado com sucesso!`);
+        reset();
+        setSeatSelected(undefined);
+        await getSeatsThatAreReserved();
+      } else {
+        toast.error(`Erro ao reservar assento ${seatSelected}, tente novamente mais tarde!`);
+      }
+    } catch (error) {
+      console.log('Erro ao enviar reserva:', error);
+
+      if (isAxiosError(error) && error.response) {
+        if (error.response.data && error.response.data.error) {
+          toast.error(`Não foi possível reservar o assento ${seatSelected}: ${error.response.data.error}`);
+          return;
+        } else {
+          toast.error(`Erro ao reservar assento ${seatSelected}, tente novamente mais tarde!`);
+          return;
+        }
+      } else {
+        toast.error('Erro ao realizar reserva, tente novamente mais tarde!');
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
@@ -212,12 +200,12 @@ export default function SeatPicker() {
 
         <div className="bg-gray-800 p-4 rounded-lg shadow-lg max-w-md text-center">
           <p className="text-lg text-yellow-500 mt-1">Atenção!</p>
-          <p className="text-lg text-yellow-500 mt-1">No dia da exibição do filme, será necessário apresentar o nome ou CPF utilizado na reserva para validar a entrada.</p>
+          <p className="text-lg text-yellow-500 mt-1">No dia da exibição do filme, será necessário apresentar o nome ou email utilizado na reserva para validar a entrada.</p>
         </div>
       </div>
 
       {seatSelected !== undefined && (
-        <form onSubmit={handleCreateReservation} className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mb-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mb-8">
           <h3 className="text-xl font-bold mb-4 text-white">Dados da Reserva</h3>
 
           <div className="mb-4">
@@ -230,38 +218,73 @@ export default function SeatPicker() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Nome Completo</label>
-              <input
+              <Label className="block text-sm text-gray-300 mb-1">Nome Completo</Label>
+              <Input
+                id="name"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...register('name')}
                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
                 placeholder="Fulano Ciclano Bertlano"
-                required
-                disabled={isProcessingReservation}
+                disabled={isSubmitting}
               />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">CPF</label>
-              <input
-                type="text"
-                value={cpf}
-                onChange={handleChangeCpf}
-                maxLength={14}
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
-                placeholder="000.000.000-00"
-                required
-                disabled={isProcessingReservation}
-              />
+
+              {errors.name && (
+                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                  {errors.name.message}
+                </span>
+              )}
             </div>
 
-            <button
+            <div>
+              <Label className="block text-sm text-gray-300 mb-1">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register('email')}
+                maxLength={100}
+                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                placeholder="fulano@example.com"
+                disabled={isSubmitting}
+              />
+
+              {errors.email && (
+                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <Label className="block text-sm text-gray-300 mb-1">Telefone</Label>
+              <Input
+                id="phone"
+                type="text"
+                {...register('phone')}
+                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                placeholder="(00) 00000-0000 ou (00) 0000-0000"
+                disabled={isSubmitting}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setValue("phone", maskPhone(e.target.value), {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })}
+              />
+
+              {errors.phone && (
+                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                  {errors.phone.message}
+                </span>
+              )}
+            </div>
+
+            <Button
               type="submit"
               className="w-full hover:cursor-pointer bg-red-600 py-3 rounded font-bold text-white hover:bg-red-700 transition"
-              disabled={isProcessingReservation}
+              disabled={isSubmitting}
+              variant={"default"}
             >
               Confirmar e Salvar
-            </button>
+            </Button>
           </div>
         </form>
       )}

@@ -12,14 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
-import { Ticket, TicketApi } from "@/types/ticket";
-import { maskCPF, validateCPF } from "@/lib/cpfUtils";
+import { useState, useEffect } from "react";
+import { ReservationFormData, ReservationSchema, Ticket, TicketApi } from "@/types/ticket";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ticketsService } from "@/services/tickets";
 import { isAxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { maskPhone } from "@/utils/masks";
 
 interface Props {
     ticketDataToBePossibleUpdated: TicketApi;
@@ -29,83 +33,42 @@ interface Props {
 
 export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpdatePage, shouldDisable }: Props) {
     const [isOpen, setIsOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        cpf: ticketDataToBePossibleUpdated.cpf,
-        seat: ticketDataToBePossibleUpdated.seat,
-        name: ticketDataToBePossibleUpdated.name,
-    });
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const router = useRouter()
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting, isDirty },
+        reset,
+        setValue
+    } = useForm<ReservationFormData>({
+        resolver: zodResolver(ReservationSchema),
+        defaultValues: {
+            name: ticketDataToBePossibleUpdated.name,
+            email: ticketDataToBePossibleUpdated.email,
+            seat: ticketDataToBePossibleUpdated.seat,
+            phone: maskPhone(ticketDataToBePossibleUpdated.phone)
+        }
+    });
 
     useEffect(() => {
         if (isOpen) {
-            setFormData({
-                cpf: ticketDataToBePossibleUpdated.cpf,
-                seat: ticketDataToBePossibleUpdated.seat,
+            reset({
                 name: ticketDataToBePossibleUpdated.name,
+                email: ticketDataToBePossibleUpdated.email,
+                seat: ticketDataToBePossibleUpdated.seat,
+                phone: maskPhone(ticketDataToBePossibleUpdated.phone)
             });
-            setErrors({});
         }
-    }, [isOpen, ticketDataToBePossibleUpdated]);
+    }, [isOpen, ticketDataToBePossibleUpdated, reset]);
 
-    const hasChanges = useCallback(() => {
-        return (
-            formData.cpf !== ticketDataToBePossibleUpdated.cpf ||
-            formData.seat !== ticketDataToBePossibleUpdated.seat ||
-            formData.name !== ticketDataToBePossibleUpdated.name
-        );
-    }, [formData, ticketDataToBePossibleUpdated]);
-
-    const validateForm = useCallback((): boolean => {
-        const newErrors: { [key: string]: string } = {};
-
-        if (!formData.name.trim()) {
-            newErrors.name = "Nome é obrigatório";
-        }
-
-        if (formData.name.trim().length < 2 || formData.name.trim().length > 50) {
-            newErrors.name = "Nome deve conter entre 2 e 50 caracteres";
-        }
-
-        if (!formData.cpf.trim()) {
-            newErrors.cpf = "CPF é obrigatório";
-        } else if (!validateCPF(formData.cpf)) {
-            newErrors.cpf = "CPF inválido";
-        }
-
-        if (!formData.seat || formData.seat <= 0) {
-            newErrors.seat = "Assento é obrigatório";
-        } else if (formData.seat > 122) { 
-            newErrors.seat = "Assento inválido";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    }, [formData]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        setIsLoading(true);
-
-        if (!hasChanges()) {
-            toast.warning('Não houve alterações nos dados para atualização!');
-            setIsLoading(false);
-            setIsOpen(false);
-            return;
-        }
-
-        if (!validateForm()) {
-            setIsLoading(false);
-            return;
-        }
-
+    const onSubmit = async (data: ReservationFormData) => {
         try {
             const ticketData: Ticket = {
-                name: formData.name.trim(),
-                cpf: formData.cpf,
-                seat: String(formData.seat),
+                name: data.name.trim(),
+                email: data.email.trim(),
+                seat: String(data.seat),
+                phone: data.phone.trim(),
                 createdAt: ticketDataToBePossibleUpdated.createdAt,
                 updatedAt: ticketDataToBePossibleUpdated.updatedAt
             };
@@ -114,28 +77,24 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
 
             if (response.status === 200) {
                 toast.success('Reserva atualizada com sucesso!!!');
-                setIsLoading(false)
                 setIsOpen(false)
-
                 if (onUpdatePage) onUpdatePage()
             } else {
                 toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
-                setIsLoading(false)
             }
         } catch (error) {
             console.log('Erro ao atualizar reserva:', error);
 
-            if(isAxiosError(error) && error.response) {
-                if(error.response.status === 401) {
+            if (isAxiosError(error) && error.response) {
+                if (error.response.status === 401) {
                     toast.error('Sessão expirada. Por favor, faça login novamente!');
                     localStorageUtil.removeItem('accessToken')
-                    setIsLoading(false)
                     setIsOpen(false)
                     router.push('/')
                     return
                 }
-            
-                if(error.response.data && error.response.data.error) {
+
+                if (error.response.data && error.response.data.error) {
                     const errorMessage = error.response.data.error;
                     toast.error(errorMessage);
                 } else {
@@ -144,22 +103,8 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
             } else {
                 toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
             }
-        } finally {
-            setIsLoading(false);
         }
-    };
-
-    const handleInputChange = (field: string, value: string | number) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const maskedCpf = maskCPF(e.target.value);
-        handleInputChange('cpf', maskedCpf);
-    };
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -182,61 +127,93 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <Label className="block text-sm font-medium mb-1">
                                 Nome Completo *
-                            </label>
-                            <input
+                            </Label>
+                            <Input
+                                id="name"
                                 type="text"
-                                value={formData.name}
-                                onChange={(e) => handleInputChange('name', e.target.value)}
-                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.name ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                {...register('name')}
+                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
                                 placeholder="Fulano da Silva"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                             />
+
                             {errors.name && (
-                                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                    {errors.name.message}
+                                </span>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                CPF *
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.cpf}
-                                onChange={handleCpfChange}
-                                maxLength={14}
-                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.cpf ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                placeholder="000.000.000-00"
-                                disabled={isLoading}
+                            <Label className="block text-sm font-medium mb-1">
+                                Email *
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                {...register('email')}
+                                maxLength={100}
+                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                                placeholder="fulano@exemplo.com"
+                                disabled={isSubmitting}
                             />
-                            {errors.cpf && (
-                                <p className="text-red-500 text-xs mt-1">{errors.cpf}</p>
+
+                            {errors.email && (
+                                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                    {errors.email.message}
+                                </span>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <Label className="block text-sm font-medium mb-1">
                                 Assento *
-                            </label>
-                            <input
+                            </Label>
+                            <Input
+                                id="seat"
                                 type="number"
-                                value={formData.seat}
-                                onChange={(e) => handleInputChange('seat', Number(e.target.value))}
+                                {...register('seat', { valueAsNumber: true })}
                                 min="1"
                                 max="122"
-                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.seat ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                disabled={isLoading}
+                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.seat ? 'border-red-500' : 'border-gray-300'}`}
+                                disabled={isSubmitting}
+                                placeholder="Número do assento (1-122)"
                             />
+
                             {errors.seat && (
-                                <p className="text-red-500 text-xs mt-1">{errors.seat}</p>
+                                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                    {errors.seat.message}
+                                </span>
+                            )}
+                        </div>
+
+                        <div>
+                            <Label className="block text-sm font-medium mb-1">
+                                Telefone *
+                            </Label>
+                            <Input
+                                id="phone"
+                                type="text"
+                                {...register('phone')}
+                                className={`w-full p-2 rounded border focus:border-blue-500 outline-none transition-colors ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
+                                placeholder="(00) 00000-0000 ou (00) 0000-0000"
+                                disabled={isSubmitting}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                    setValue("phone", maskPhone(e.target.value), {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    })}
+                            />
+
+                            {errors.phone && (
+                                <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                    {errors.phone.message}
+                                </span>
                             )}
                         </div>
                     </div>
@@ -246,7 +223,7 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                             <Button
                                 type="button"
                                 variant="outline"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                                 className="hover:cursor-pointer border border-black"
                             >
                                 Cancelar
@@ -254,11 +231,11 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                         </DialogClose>
                         <Button
                             type="submit"
-                            disabled={isLoading || !hasChanges()}
+                            disabled={isSubmitting || !isDirty}
                             className="min-w-20 hover:cursor-pointer"
                             variant={"destructive"}
                         >
-                            {isLoading ? "Atualizando..." : "Atualizar"}
+                            {!isDirty ? "Sem alterações" : isSubmitting ? "Atualizando..." : "Atualizar"}
                         </Button>
                     </DialogFooter>
                 </form>

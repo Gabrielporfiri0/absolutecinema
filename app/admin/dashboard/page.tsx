@@ -26,6 +26,7 @@ import {
     DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { maskPhone } from "@/utils/masks";
 
 export default function Page() {
     const router = useRouter()
@@ -52,7 +53,7 @@ export default function Page() {
     };
 
     const filteredReservations = reservations.filter((reservation) =>
-        reservation.cpf.includes(busca) ||
+        reservation.email.includes(busca) ||
         reservation.name.toLowerCase().includes(busca.toLowerCase())
     );
 
@@ -340,7 +341,7 @@ export default function Page() {
                             <label className="block text-sm font-medium text-gray-400 mb-2">Pesquisar Reserva</label>
                             <input
                                 type="text"
-                                placeholder="Digite o CPF ou Nome..."
+                                placeholder="Digite o Email ou Nome..."
                                 value={busca}
                                 onChange={(e) => setBusca(e.target.value)}
                                 className="w-full p-3 bg-black border border-gray-700 rounded text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
@@ -454,8 +455,9 @@ export default function Page() {
                                         <thead className="bg-black text-gray-300 uppercase text-sm font-semibold">
                                             <tr>
                                                 <th className="p-4 border-b border-gray-800">Nome</th>
-                                                <th className="p-4 border-b border-gray-800">CPF</th>
+                                                <th className="p-4 border-b border-gray-800">Email</th>
                                                 <th className="p-4 border-b border-gray-800">Cadeira</th>
+                                                <th className="p-4 border-b border-gray-800">Telefone</th>
                                                 <th className="p-4 border-b border-gray-800">Ações</th>
                                             </tr>
                                         </thead>
@@ -463,8 +465,9 @@ export default function Page() {
                                             {filteredReservations.map((reservation) => (
                                                 <tr key={String(reservation._id)} className="hover:bg-gray-800/50">
                                                     <td className="p-4 text-white">{reservation.name}</td>
-                                                    <td className="p-4 text-sm">{reservation.cpf}</td>
+                                                    <td className="p-4 text-sm">{reservation.email}</td>
                                                     <td className="p-4 text-sm">{reservation.seat}</td>
+                                                    <td className="p-4 text-sm">{maskPhone(reservation.phone)}</td>
                                                     <td className="p-4 text-sm flex">
                                                         <TicketDeleteModal
                                                             ticketID={String(reservation._id)}
