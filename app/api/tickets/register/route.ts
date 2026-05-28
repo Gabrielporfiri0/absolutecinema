@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
             email: data.email,
             seat: Number(data.seat),
             phone: data.phone,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         })
 
         return NextResponse.json({ message: "Reserva feita com sucesso!", id: String(response.insertedId) }, { status: 201 })

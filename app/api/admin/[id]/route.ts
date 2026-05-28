@@ -87,7 +87,7 @@ export async function PUT(
             name: data.name,
             password: hashedPassword,
             createdAt: data.createdAt,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         }
 
         await adminsCollection.updateOne(

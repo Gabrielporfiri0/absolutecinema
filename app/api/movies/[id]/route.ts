@@ -57,7 +57,7 @@ export async function PUT(
                     session_time: data.session_time,
                     photo: data.photo,
                     createdAt: data.createdAt,
-                    updatedAt: new Date()
+                    updatedAt: new Date().toISOString()
                 }
             }
         )

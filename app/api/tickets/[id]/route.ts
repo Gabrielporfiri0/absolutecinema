@@ -132,7 +132,7 @@ export async function PUT(
                     seat: Number(data.seat),
                     phone: data.phone,
                     createdAt: data.createdAt,
-                    updatedAt: new Date()
+                    updatedAt: new Date().toISOString()
                 }
             }
         )

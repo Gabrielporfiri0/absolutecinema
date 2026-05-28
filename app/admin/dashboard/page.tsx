@@ -3,7 +3,6 @@
 import AdminDeleteModal from "@/components/AdminDeleteModal";
 import TicketDeleteModal from "@/components/TicketDeleteModal";
 import TicketUpdateModal from "@/components/TicketUpdateModal";
-import { formatUTCToBR } from "@/lib/dates";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { AdminUser } from "@/types/admin";
 import { TicketApi } from "@/types/ticket";

@@ -2,13 +2,13 @@ import bcrypt from "bcryptjs"
 import { MongoClient, Db } from "mongodb"
 
 const uri = process.env.URIMONGOLOCAL
+const DEFAULT_USER_PASSWORD = process.env.DEFAULT_USER_PASSWORD
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
 
 if(!uri) throw Error('Defina URIMONGOLOCAL no arquivo .env !!!')
-
-const DEFAULT_USER_PASSWORD = '123456'
+if(!DEFAULT_USER_PASSWORD) throw Error('Defina DEFAULT_USER_PASSWORD no arquivo .env !!!')
 
 export async function connectToBD(): Promise<Db>{
     if(!client){
@@ -38,13 +38,13 @@ async function createDefaultAdmin(db: Db) {
     })
 
     if (!adminExists) {
-        const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10)
+        const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD as string, 10)
     
         await collection.insertOne({
             name: "Administrador",
             password: hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         })
     }
 }

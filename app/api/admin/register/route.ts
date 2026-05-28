@@ -33,8 +33,8 @@ export async function POST(request: NextRequest){
         const response = await adminCollection.insertOne({ 
             name: data.name, 
             password: hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         })
 
         return NextResponse.json({ message: 'Novo admin cadastrado com sucesso', id: String(response.insertedId) }, { status: 201 })

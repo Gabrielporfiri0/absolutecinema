@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
             session_date: data.session_date,
             session_time: data.session_time,
             photo: data.photo,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         })
 
         return NextResponse.json({ message: "Filme cadastrado com sucesso!", id: String(response.insertedId) }, { status: 201 })

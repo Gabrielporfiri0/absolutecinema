@@ -15,3 +15,13 @@ export function formatUTCToBR(dateUTC: string): string {
 
     return `${dia}/${mes}/${ano} ${hora}:${minuto}`;
 }
+
+export const DEFAULT_TIMEZONE = 'America/Campo_Grande'
+
+export function formatDateBR(date: Date | string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: DEFAULT_TIMEZONE,
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }).format(new Date(date))
+}
