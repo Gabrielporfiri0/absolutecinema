@@ -279,7 +279,7 @@ export default function Page() {
                     </button>
                 </div>
 
-                <div className="flex gap-4 mb-8 border-b border-gray-800">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8 border-b border-gray-800">
                     <button
                         onClick={() => setActiveTab('reservas')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'reservas' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
