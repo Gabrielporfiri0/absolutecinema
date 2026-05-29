@@ -99,7 +99,6 @@ export default function SeatPicker() {
       if (seatSelected !== undefined) {
         toast.error('Só é possível reservar 1 assento por vez, para reservar mais assentos, finalize a reserva atual e inicie uma nova reserva!');
         setValue('seat', 0);
-        // setSeatSelected(undefined);
         return;
       }
 
