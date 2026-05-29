@@ -196,11 +196,6 @@ export default function SeatPicker() {
           <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-green-500"></div> Selecionada</div>
           <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-red-700"></div> Ocupada</div>
         </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg shadow-lg max-w-md text-center">
-          <p className="text-lg text-yellow-500 mt-1">Atenção!</p>
-          <p className="text-lg text-yellow-500 mt-1">No dia da exibição do filme, será necessário apresentar o nome ou email utilizado na reserva para validar a entrada.</p>
-        </div>
       </div>
 
       {seatSelected !== undefined && (

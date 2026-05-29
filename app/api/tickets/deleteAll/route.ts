@@ -2,7 +2,7 @@ import { validateAuth } from "@/lib/auth-utils"
 import { NextRequest, NextResponse } from "next/server"
 import { getTicketsCollection } from "../mongodb"
 
-export async function GET(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
     try {
         const aValidTokenWasSent = await validateAuth(request)
 

@@ -64,7 +64,7 @@ export const ticketsService = {
     },
     deleteAll: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.get<DeleteAllTicketsSuccessResponse>('/api/tickets/deleteAll', {
+        const response = await axios.delete<DeleteAllTicketsSuccessResponse>('/api/tickets/deleteAll', {
             headers: {
                 'Content-Type': 'application/json',
                 ...authorizationHeader
