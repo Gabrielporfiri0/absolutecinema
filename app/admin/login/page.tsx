@@ -1,90 +1,65 @@
 'use client'
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { localStorageUtil } from "@/lib/localStorage_"
 import { adminsService } from "@/services/admins"
+import { AdminFormData, AdminSchema } from "@/types/admin"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { isAxiosError } from "axios"
 import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 export default function Page() {
-    const [userName, setUserName] = useState<string>('')
-    const [userPassword, setUserPassword] = useState<string>('')
-    const [isProcessingLogin, setIsProcessingLogin] = useState<boolean>(false)
     const router = useRouter()
-
     const [showPassword, setShowPassword] = useState(false)
 
-    const handleLoginNewAdmin = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset,
+    } = useForm<AdminFormData>({
+        resolver: zodResolver(AdminSchema),
+        defaultValues: {
+            name: "",
+            password: "",
+        },
+    });
 
-        setIsProcessingLogin(true)
-
-        if(!userName || !userPassword){
-            toast.error('Por favor, informe usuário e senha!')
-            setIsProcessingLogin(false)
-            return
-        }
-
-        if(userName.trim().length === 0 || userPassword.trim().length === 0) {
-            toast.error('Usuário e senha não podem conter apenas espaços em branco!')
-            setIsProcessingLogin(false)
-            return
-        }
-
-        if(userName.trim().length < 3 || userName.trim().length > 20) {
-            toast.error('Usuário deve ter entre 3 e 20 caracteres')
-            setIsProcessingLogin(false)
-            return
-        }
-
-        if(userPassword.trim().length < 6 || userPassword.trim().length > 20) {
-            toast.error('Senha deve ter entre 6 e 20 caracteres')
-            setIsProcessingLogin(false)
-            return
-        }
-
+    const onSubmit = async (data: AdminFormData) => {
         try {
             const response = await adminsService.login({
-                name: userName.trim(),
-                password: userPassword.trim()
+                name: data.name.trim(),
+                password: data.password.trim()
             })
 
             if (response.status === 200) {
                 const tokenIsSet = localStorageUtil.setItem('accessToken', response.data.token || '')
-                
-                if(tokenIsSet){
-                    toast.success('Login realizado com sucesso!!!')
-                    setUserName('')
-                    setUserPassword('')
-                    setIsProcessingLogin(false)
 
+                if (tokenIsSet) {
+                    toast.success('Login realizado com sucesso!!!')
+                    reset()
                     router.push('./dashboard')
                 }
-
-                setIsProcessingLogin(false)
             } else {
                 toast.error('Erro ao realizar login, tente novamente mais tarde!')
-                setIsProcessingLogin(false)
             }
         } catch (error) {
             console.log('Erro ao tentar logar admin: ', error)
 
-            if(isAxiosError(error) && error.response) {
-                if(error.response.data && error.response.data.error) {
+            if (isAxiosError(error) && error.response) {
+                if (error.response.data && error.response.data.error) {
                     toast.error(error.response.data.error)
-                    setIsProcessingLogin(false)
-                    return
                 } else {
                     toast.error('Erro ao tentar logar admin, tente novamente mais tarde!');
-                    setIsProcessingLogin(false)
-                    return
                 }
             } else {
                 toast.error('Erro ao tentar logar admin, tente novamente mais tarde!');
-                setIsProcessingLogin(false)
-                return
             }
         }
     }
@@ -97,33 +72,38 @@ export default function Page() {
                     <p className="text-gray-400">Acesso exclusivo para administradores</p>
                 </div>
 
-                <form onSubmit={handleLoginNewAdmin} className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Usuário</label>
-                        <input
+                        <Label className="block text-sm font-medium text-gray-300 mb-2">Usuário</Label>
+                        <Input
+                            id="name"
                             type="text"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none"
-                            disabled={isProcessingLogin}
+                            {...register('name')}
+                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none selection:bg-blue-700"
+                            disabled={isSubmitting}
                         />
+
+                        {errors.name && (
+                            <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                {errors.name.message}
+                            </span>
+                        )}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <Label className="block text-sm font-medium text-gray-300 mb-2">
                             Senha
-                        </label>
+                        </Label>
 
                         <div className="relative">
-                            <input
+                            <Input
+                                id="password"
                                 type={showPassword ? "text" : "password"}
-                                value={userPassword}
-                                onChange={(e) =>
-                                    setUserPassword(e.target.value)
-                                }
-                                className="w-full p-3 pr-12 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none"
-                                disabled={isProcessingLogin}
+                                {...register('password')}
+                                className="w-full p-3 pr-12 bg-gray-800 border border-gray-700 rounded text-white focus:border-red-600 focus:outline-none selection:bg-blue-700"
+                                disabled={isSubmitting}
                             />
+
 
                             <button
                                 type="button"
@@ -131,7 +111,7 @@ export default function Page() {
                                     setShowPassword(!showPassword)
                                 }
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white hover:cursor-pointer"
-                                disabled={isProcessingLogin}
+                                disabled={isSubmitting}
                             >
                                 {showPassword ? (
                                     <EyeOff size={20} />
@@ -140,15 +120,22 @@ export default function Page() {
                                 )}
                             </button>
                         </div>
+
+                        {errors.password && (
+                            <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                {errors.password.message}
+                            </span>
+                        )}
                     </div>
-             
-                    <button 
-                        type="submit" 
+
+                    <Button
+                        type="submit"
                         className="w-full hover:cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition duration-200"
-                        disabled={isProcessingLogin}
+                        disabled={isSubmitting}
+                        variant={'destructive'}
                     >
                         Entrar no Sistema
-                    </button>
+                    </Button>
                 </form>
             </div>
         </div>

@@ -4,7 +4,7 @@ import AdminDeleteModal from "@/components/AdminDeleteModal";
 import TicketDeleteModal from "@/components/TicketDeleteModal";
 import TicketUpdateModal from "@/components/TicketUpdateModal";
 import { localStorageUtil } from "@/lib/localStorage_";
-import { AdminUser } from "@/types/admin";
+import { AdminFormData, AdminSchema, AdminUser } from "@/types/admin";
 import { TicketApi } from "@/types/ticket";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { maskPhone } from "@/utils/masks";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Page() {
     const router = useRouter()
@@ -35,17 +39,26 @@ export default function Page() {
 
     const [loading, setLoading] = useState(true);
     const [isProcessingTheExclusionOfAllReservations, setIsProcessingTheExclusionOfAllReservations] = useState(false);
-    const [newAdminBeingRegistered, setNewAdminBeingRegistered] = useState(false);
     const [busca, setBusca] = useState('');
 
     const [reservations, setReservations] = useState<TicketApi[]>([]);
     const [admins, setAdmins] = useState<AdminUser[]>([]);
 
-    const [newAdminUser, setNewAdminUser] = useState<string>('');
-    const [newAdminPassword, setNewAdminPassword] = useState<string>('');
-
     const [showPassword, setShowPassword] = useState(false);
     const [isProcessingLogout, setIsProcessingLogout] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset,
+    } = useForm<AdminFormData>({
+        resolver: zodResolver(AdminSchema),
+        defaultValues: {
+            name: "",
+            password: "",
+        },
+    });
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -134,7 +147,6 @@ export default function Page() {
             const response = await adminsService.logout()
 
             if (response.status === 200) {
-
                 const hasItWorked = localStorageUtil.removeItem('accessToken')
 
                 if (!hasItWorked) {
@@ -183,66 +195,27 @@ export default function Page() {
         getAllAdmins()
     };
 
-    const handleCreateANewAdmin = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        setNewAdminBeingRegistered(true);
-
-        if (!newAdminUser || !newAdminPassword) {
-            toast.error('Preencha usuário e senha para o novo admin!');
-            setNewAdminBeingRegistered(false);
-            return
-        }
-
-        if (newAdminUser.trim().length === 0) {
-            toast.error('O nome de usuário não pode conter apenas espaços em branco!');
-            setNewAdminBeingRegistered(false);
-            return
-        }
-
-        if (newAdminPassword.trim().length === 0) {
-            toast.error('A senha não pode conter apenas espaços em branco!');
-            setNewAdminBeingRegistered(false);
-            return
-        }
-
-        if (newAdminUser.trim().length < 3 || newAdminUser.trim().length > 20) {
-            toast.error('O nome de usuário deve conter no mínimo 3 caracteres e no máximo 20!');
-            setNewAdminBeingRegistered(false);
-            return
-        }
-
-        if (newAdminPassword.trim().length < 6 || newAdminPassword.trim().length > 20) {
-            toast.error('A senha deve conter no mínimo 6 caracteres e no máximo 20!');
-            setNewAdminBeingRegistered(false);
-            return
-        }
-
+    const onSubmit = async(data: AdminFormData) => {
         try {
             const response = await adminsService.create({
-                name: newAdminUser.trim(),
-                password: newAdminPassword.trim()
+                name: data.name.trim(),
+                password: data.password.trim()
             })
 
             if (response.status === 201) {
-                toast.success(`Administrador "${newAdminUser}" cadastrado com sucesso!`);
-                setNewAdminUser('')
-                setNewAdminPassword('')
+                toast.success(`Administrador "${data.name.trim()}" cadastrado com sucesso!`);
+                reset()
                 await getAllAdmins()
-                setNewAdminBeingRegistered(false);
-                return
             } else {
                 toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!')
             }
-        } catch (error) {
+        } catch(error) {
             console.log('Erro ao cadastrar novo admin: ', error)
 
             if (isAxiosError(error) && error.response) {
                 if (error.response.status === 401) {
                     toast.error('Sessão expirada, faça login novamente!');
-                    setNewAdminBeingRegistered(false);
                     router.push('/')
-                    return
                 } else if (error.response.data && error.response.data.error) {
                     toast.error(error.response.data.error);
                 } else {
@@ -251,8 +224,6 @@ export default function Page() {
             } else {
                 toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!');
             }
-        } finally {
-            setNewAdminBeingRegistered(false);
         }
     }
 
@@ -298,11 +269,11 @@ export default function Page() {
                         <h1 className="text-3xl font-bold text-red-600">Painel Administrativo</h1>
                         <p className="text-gray-400">Bem-vindo</p>
                     </div>
-                    
+
                     <button
                         onClick={handleLogout}
                         className="bg-red-900/50 hover:cursor-pointer hover:bg-red-900 text-red-200 px-4 py-2 rounded border border-red-800 transition"
-                        disabled={isProcessingLogout || isProcessingTheExclusionOfAllReservations}
+                        disabled={isProcessingLogout || isProcessingTheExclusionOfAllReservations || isSubmitting}
                     >
                         Sair
                     </button>
@@ -312,7 +283,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('reservas')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'reservas' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
-                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || isSubmitting || loading}
                     >
                         Gerenciar Reservas
                     </button>
@@ -320,7 +291,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('admins')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'admins' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
-                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || isSubmitting || loading}
                     >
                         Gerenciar Administradores
                     </button>
@@ -328,7 +299,7 @@ export default function Page() {
                     <button
                         onClick={() => setActiveTab('movie')}
                         className={`pb-2 hover:cursor-pointer px-4 font-medium transition ${activeTab === 'movie' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400 hover:text-white'}`}
-                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || newAdminBeingRegistered || loading}
+                        disabled={isProcessingTheExclusionOfAllReservations || isProcessingLogout || isSubmitting || loading}
                     >
                         Gerenciar Filme em cartaz
                     </button>
@@ -504,7 +475,7 @@ export default function Page() {
                                         <AdminDeleteModal
                                             adminID={String(admin._id)}
                                             onUpdatePage={handleUpdatePage}
-                                            shouldDisable={newAdminBeingRegistered}
+                                            shouldDisable={isSubmitting}
                                         />
                                     </li>
                                 ))}
@@ -514,48 +485,62 @@ export default function Page() {
                         {/* Direita: Formulário de Cadastro */}
                         <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-800 p-6">
                             <h2 className="text-xl font-bold text-white mb-4 border-l-4 border-green-600 pl-3">Novo Admin</h2>
-                            <form onSubmit={handleCreateANewAdmin} className="space-y-4">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Novo Usuário</label>
-                                    <input
+                                    <Label className="block text-sm text-gray-400 mb-1">Novo Usuário</Label>
+                                    <Input
+                                        id="name"
                                         type="text"
-                                        value={newAdminUser}
-                                        onChange={(e) => setNewAdminUser(e.target.value)}
-                                        className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
+                                        {...register('name')}
+                                        className="w-full p-2 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none selection:bg-blue-700 selection:text-white"
                                         placeholder="Ex: coordenador"
-                                        disabled={newAdminBeingRegistered}
+                                        disabled={isSubmitting}
                                     />
+
+                                    {errors.name && (
+                                        <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                            {errors.name.message}
+                                        </span>
+                                    )}
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Senha de Acesso</label>
+                                    <Label className="block text-sm text-gray-400 mb-1">Senha de Acesso</Label>
                                     <div className="relative">
-                                        <input
+                                        <Input
+                                            id="password"
                                             type={showPassword ? 'text' : 'password'}
-                                            value={newAdminPassword}
-                                            onChange={(e) => setNewAdminPassword(e.target.value)}
-                                            className="w-full p-2 pr-12 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none"
+                                            {...register('password')}
+                                            className="w-full p-2 pr-12 bg-black border border-gray-700 rounded text-white focus:border-green-500 focus:outline-none selection:bg-blue-700 selection:text-white"
                                             placeholder="Defina uma senha"
-                                            disabled={newAdminBeingRegistered}
+                                            disabled={isSubmitting}
                                         />
 
                                         <button
                                             type="button"
                                             onClick={togglePasswordVisibility}
                                             className="hover:cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                                            disabled={newAdminBeingRegistered}
+                                            disabled={isSubmitting}
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
+
+                                    {errors.password && (
+                                        <span className="text-rose-400 text-xs sm:text-sm block pl-1 mt-1">
+                                            {errors.password.message}
+                                        </span>
+                                    )}
                                 </div>
-                                
-                                <button
+
+                                <Button
                                     type="submit"
-                                    className="w-full hover:cursor-pointer bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded transition"
-                                    disabled={newAdminBeingRegistered}
+                                    className="w-full hover:cursor-pointer bg-green-700 hover:bg-green-500 font-bold py-2 rounded transition"
+                                    disabled={isSubmitting}
+                                    variant={'outline'}
                                 >
                                     + Cadastrar Administrador
-                                </button>
+                                </Button>
                             </form>
                         </div>
                     </div>
