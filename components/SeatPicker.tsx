@@ -217,7 +217,7 @@ export default function SeatPicker() {
                 id="name"
                 type="text"
                 {...register('name')}
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none selection:bg-blue-700 selection:text-white"
                 placeholder="Fulano Ciclano Bertlano"
                 disabled={isSubmitting}
               />
@@ -236,7 +236,7 @@ export default function SeatPicker() {
                 type="email"
                 {...register('email')}
                 maxLength={100}
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none selection:bg-blue-700 selection:text-white"
                 placeholder="fulano@example.com"
                 disabled={isSubmitting}
               />
@@ -254,7 +254,7 @@ export default function SeatPicker() {
                 id="phone"
                 type="text"
                 {...register('phone')}
-                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none"
+                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-red-500 outline-none selection:bg-blue-700 selection:text-white"
                 placeholder="(00) 00000-0000 ou (00) 0000-0000"
                 disabled={isSubmitting}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>

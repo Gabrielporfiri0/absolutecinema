@@ -11,11 +11,15 @@ import { movieService } from "@/services/movie";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { validateImage } from "@/utils/imageUtils";
+import { Checkbox } from "./ui/checkbox";
+import { Field, FieldGroup, FieldLabel } from "./ui/field";
+import { Trash2 } from "lucide-react";
 
 export default function HandleMovieInformation() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [initialMovieData, setInitialMovieData] = useState<Movies>();
+    const [checkboxState, setCheckBoxState] = useState(false)
 
     const router = useRouter();
 
@@ -225,6 +229,25 @@ export default function HandleMovieInformation() {
         }
     }
 
+    useEffect(() => {
+        if (!checkboxState && previewUrl) {
+            setSelectedFile(null)
+            setPreviewUrl(null)
+        }
+    }, [checkboxState])
+
+    function handleRemovePreviewImage() {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+
+        if (!initialMovieData) {
+            setValue("photo", "", {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
+        }
+    }
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
@@ -318,7 +341,7 @@ export default function HandleMovieInformation() {
                     </span>
                 )}
             </div>
-            
+
             <div className="space-y-1.5">
                 <label htmlFor="duration" className="block text-sm font-medium text-zinc-300">
                     Data da exibição do filme (DD/MM/AAAA) <span className="text-rose-400">*</span>
@@ -363,56 +386,177 @@ export default function HandleMovieInformation() {
                 )}
             </div>
 
-            <div className="space-y-1.5">
-                <label htmlFor="photo" className="block text-sm font-medium text-zinc-300">
-                    Pôster do filme <span className="text-rose-400">*</span>
-                </label>
+            <div className="space-y-5">
+                <div className="space-y-1.5">
+                    <label
+                        htmlFor="photo"
+                        className="block text-sm font-medium text-zinc-200"
+                    >
+                        Pôster do filme{" "}
+                        <span className="text-rose-400">*</span>
+                    </label>
 
-                <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    disabled={isSubmitting}
-                    className="w-full text-sm text-zinc-200 
-                   file:mr-4 file:py-2 file:px-4 
-                   file:rounded-lg file:border-0 file:text-sm file:font-semibold 
-                   file:bg-purple-600 file:text-white file:hover:bg-purple-700 
-                   file:transition file:cursor-pointer 
-                   disabled:opacity-50 
-                   bg-zinc-900/70 border-zinc-600 rounded-xl
-                   h-10
-                   leading-tight
-                   file:h-full"
-                />
+                    <p className="text-xs text-zinc-400">
+                        Envie uma imagem para o pôster do filme.
+                    </p>
+                </div>
+
+                {initialMovieData && (
+                    <div className="rounded-xl border border-zinc-700 bg-zinc-900/50 p-4">
+                        <FieldGroup>
+                            <Field orientation="horizontal" className="gap-3">
+                                <Checkbox
+                                    checked={checkboxState}
+                                    onCheckedChange={() =>
+                                        setCheckBoxState(!checkboxState)
+                                    }
+                                    id="change-movie-photo"
+                                    name="change-movie-photo"
+                                    className="
+                                        data-[state=checked]:bg-purple-600
+                                        data-[state=checked]:border-purple-600
+                                        hover:cursor-pointer
+                                    "
+                                    disabled={isSubmitting}
+                                />
+
+                                <FieldLabel
+                                    htmlFor="change-movie-photo"
+                                    className="cursor-pointer text-sm text-zinc-300"
+                                >
+                                    Deseja trocar o pôster do filme atual?
+                                </FieldLabel>
+                            </Field>
+                        </FieldGroup>
+                    </div>
+                )}
+
+                {(!initialMovieData || checkboxState) && (
+                    <div
+                        className="
+                            relative overflow-hidden rounded-2xl
+                            border border-dashed border-zinc-600
+                            bg-zinc-900/60
+                            transition-all duration-200
+                            hover:border-purple-500
+                            hover:bg-zinc-900
+                            focus-within:border-purple-500
+                            focus-within:ring-2
+                            focus-within:ring-purple-500/30
+                        "
+                    >
+                        <Input
+                            id="photo"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileChange}
+                            disabled={isSubmitting}
+                            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                        />
+
+                        <div className="flex min-h-28 flex-col items-center justify-center gap-3 px-4 py-6 text-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10 border border-purple-500/20 shrink-0">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-purple-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3 15a4 4 0 014-4h1m4-4h1a4 4 0 014 4m-4 4l-4-4m0 0l-4 4m4-4v12"
+                                    />
+                                </svg>
+                            </div>
+
+                            <div className="space-y-1 max-w-full">
+                                <p className="text-sm font-medium text-zinc-200">
+                                    Clique para enviar uma imagem
+                                </p>
+
+                                <p className="text-xs text-zinc-500">
+                                    PNG, JPG, JPEG ou WEBP
+                                </p>
+
+                                {selectedFile && (
+                                    <p className="max-w-62.5 truncate text-xs text-purple-400 font-medium mx-auto">
+                                        {selectedFile.name}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {errors.photo && (
-                    <span className="text-rose-400 text-xs sm:text-sm block pl-1">
+                    <span className="block pl-1 text-sm text-rose-400">
                         {errors.photo.message}
                     </span>
                 )}
-            </div>
 
-            {(previewUrl || initialMovieData?.photo) && (
-                <div className="flex justify-center pt-2">
-                    <img
-                        src={previewUrl ?? initialMovieData?.photo}
-                        alt="Pré-visualização do poster"
-                        className="max-h-48 rounded-lg border border-zinc-600 shadow-md object-cover hover:scale-105 transition-transform duration-200"
-                    />
-                </div>
-            )}
+                {(previewUrl || initialMovieData?.photo) && (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="block text-sm font-medium text-zinc-300">
+                                Pré-visualização
+                            </span>
+
+                            {previewUrl && (
+                                <Button
+                                    type="button"
+                                    onClick={handleRemovePreviewImage}
+                                    className="
+                                        flex items-center gap-2
+                                        rounded-lg border border-rose-500/30
+                                        text-white
+                                        bg-rose-400
+                                        px-3 py-1.5
+                                        text-xs font-medium
+                                        transition-all duration-200
+                                        hover:bg-rose-500
+                                        hover:border-rose-500
+                                        active:scale-95 hover:cursor-pointer
+                                    "
+                                    disabled={isSubmitting}
+                                    variant={'destructive'}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Remover imagem
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="flex justify-center">
+                            <div className="group overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 shadow-xl">
+                                <img
+                                    src={previewUrl ?? initialMovieData?.photo}
+                                    alt="Pré-visualização do poster"
+                                    className="max-h-80 w-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+
+                                <div className="inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent px-4 py-3">
+                                    <p className="text-xs text-zinc-300">
+                                        Prévia do pôster
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <Button
                 type="submit"
                 disabled={isSubmitting || !isDirty}
-                className={`
-        w-full py-2.5 font-semibold rounded-xl transition-all duration-200 text-sm sm:text-base hover:cursor-pointer
-        ${isSubmitting || !isDirty
+                className={`w-full py-2.5 font-semibold rounded-xl transition-all duration-200 text-sm sm:text-base hover:cursor-pointer
+                    ${isSubmitting || !isDirty
                         ? "bg-zinc-700 text-zinc-400 cursor-not-allowed opacity-60"
                         : "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-purple-500/30 active:scale-[0.98]"
                     }
-      `}
+                `}
             >
                 {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">

@@ -25,5 +25,9 @@ export async function validateImage(file: File, maxSizeMB = 10): Promise<string 
     return "Imagens WebP animadas não são permitidas.";
   }
 
+  if(file.type !== "image/png" && file.type !== "image/jpeg" && file.type !== "image/jpg" && file.type !== "image/webp") {
+    return "A extensão da foto deve ser PNG, JPG, JPEG ou WEBP!"
+  }
+
   return null; 
 }
