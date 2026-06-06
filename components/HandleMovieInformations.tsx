@@ -178,6 +178,10 @@ export default function HandleMovieInformation() {
 
                 if (response.status === 200) {
                     toast.success("Dados do filme em cartaz atualizados com sucesso!");
+
+                    reset();
+                    setSelectedFile(null);
+                    router.push('/')
                 } else {
                     toast.error("Erro ao atualizar dados do filme em cartaz, tente novamente mais tarde.");
                 }

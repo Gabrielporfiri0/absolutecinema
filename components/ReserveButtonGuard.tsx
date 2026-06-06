@@ -18,7 +18,7 @@ export default function ReserveButtonGuard({ filmId, className, children, videoS
   const [openModal, setOpenModal] = useState(false);
 
   // const watched = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_KEY) === 'true' : false;
-  const watched = true
+  const watched = false;
  
 
   const goToSeatPicker = () => {
