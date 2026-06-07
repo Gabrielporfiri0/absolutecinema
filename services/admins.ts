@@ -3,6 +3,7 @@ import { AdminDataToBeSentInRegister, GetAdminsSuccessResponse, LoginAdminApiSuc
 import axios from "axios";
 
 const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
+const RESOURCE = process.env.NEXT_PUBLIC_APP_URL
 
 const getAuthHeaders = () => {
     const cookie = localStorageUtil.getItem('accessToken')
@@ -18,7 +19,7 @@ const getAuthHeaders = () => {
 export const adminsService = {
     getAll: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.get<GetAdminsSuccessResponse>('/api/admin/getAll', {
+        const response = await axios.get<GetAdminsSuccessResponse>(`${RESOURCE}/api/admin/getAll`, {
             headers: {
                 'Content-Type': 'application/json' ,
                 ...authorizationHeader
@@ -29,7 +30,7 @@ export const adminsService = {
     },
     delete: async (id: string) => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.delete(`/api/admin/${id}`, {
+        const response = await axios.delete(`${RESOURCE}/api/admin/${id}`, {
             headers: {
                 ...authorizationHeader
             },
@@ -39,7 +40,7 @@ export const adminsService = {
     },
     create: async (data: AdminDataToBeSentInRegister) => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.post<PostAdminSuccessResponse>('/api/admin/register', data, {
+        const response = await axios.post<PostAdminSuccessResponse>(`${RESOURCE}/api/admin/register`, data, {
             headers: {
                 'Content-Type': 'application/json' ,
                 ...authorizationHeader
@@ -49,7 +50,7 @@ export const adminsService = {
         return response
     },
     login: async (data: AdminDataToBeSentInRegister) => {
-        const response = await axios.post<LoginAdminApiSuccessResponse>('/api/admin/login', data, {
+        const response = await axios.post<LoginAdminApiSuccessResponse>(`${RESOURCE}/api/admin/login`, data, {
             headers: {
                 'Content-Type': 'application/json' ,
             },
@@ -59,7 +60,7 @@ export const adminsService = {
     },
     logout: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.post('/api/admin/logout', null, {
+        const response = await axios.post(`${RESOURCE}/api/admin/logout`, null, {
             headers: {
                 'Content-Type': 'application/json' ,
                 ...authorizationHeader
