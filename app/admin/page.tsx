@@ -1,9 +1,0 @@
-
-export default function AdminPage() {
-  
-  return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
-      <h1>Vá para: admin/login</h1>
-    </div>
-  );
-}

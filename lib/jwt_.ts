@@ -23,7 +23,6 @@ export async function verifyToken(token__: string){
             decoded: payload
         };
     } catch (error: any) {
-        console.error('Erro na verificação do token:', error.message);
         return {
             valid: false,
             expired: error.code === 'ERR_JWT_EXPIRED',

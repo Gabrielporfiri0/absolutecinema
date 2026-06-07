@@ -12,9 +12,9 @@ export async function GET() {
             arrayOfRegisteredSeats.push(ticket_.seat)
         })
 
-        return NextResponse.json({ message: 'Assentos encontrados com sucesso', status: 200, seats__: arrayOfRegisteredSeats })
+        return NextResponse.json({ message: 'Assentos encontrados com sucesso', seats__: arrayOfRegisteredSeats }, { status: 200 })
     } catch (error) {
         console.log('Erro ao realizar GET dos assentos: ', error)
-        return NextResponse.json({ error: 'Erro ao buscar assentos', status: 500 })
+        return NextResponse.json({ error: 'Erro ao buscar assentos' }, { status: 500 })
     }
 }

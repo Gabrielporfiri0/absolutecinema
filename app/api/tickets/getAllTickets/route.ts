@@ -6,13 +6,13 @@ export async function GET(request: NextRequest) {
     try {
         const aValidTokenWasSent = await validateAuth(request)
 
-        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
 
         const collection = await getTicketsCollection()
         const tickets_ = await collection.find().toArray()
-        return NextResponse.json({ message: 'Ingressos encontrados com sucesso', status: 200, tickets__: tickets_ })
+        return NextResponse.json({ message: 'Reservas encontradas com sucesso', tickets__: tickets_ }, { status: 200 })
     } catch (error) {
-        console.log('Erro ao realizar GET dos ingressos: ', error)
-        return NextResponse.json({ error: 'Erro ao buscar ingressos', status: 500 })
+        console.log('Erro ao realizar GET das reservas: ', error)
+        return NextResponse.json({ error: 'Erro ao buscar reservas' }, { status: 500 })
     }
 }

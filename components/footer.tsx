@@ -21,13 +21,15 @@ export default function Footer() {
         </div>
 
         <div className="flex items-center justify-center md:justify-end">
-          <Image
-            src="/logo_cine.jpeg"
-            alt="Logo CINEUEMS"
-            width={200} 
-            height={70}
-            className="object-contain"
-          />
+          <div className="relative w-50 h-17.5">
+            <Image
+              src="/logo_cine.jpeg"
+              alt="Logo CINEUEMS"
+              fill
+              sizes="200px"
+              className="object-contain"
+            />
+          </div>
         </div>
 
       </div>

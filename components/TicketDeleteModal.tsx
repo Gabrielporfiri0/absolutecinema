@@ -15,13 +15,16 @@ import { useState } from "react";
 import { localStorageUtil } from "@/lib/localStorage_";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ticketsService } from "@/services/tickets";
+import { isAxiosError } from "axios";
 
 interface Props {
     ticketID: string;
     onUpdatePage?: () => void;
+    shouldDisable?: boolean;
 }
 
-export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
+export default function TicketDeleteModal({ ticketID, onUpdatePage, shouldDisable }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -30,66 +33,48 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
         setIsLoading(true);
 
         try {
-            const accessToken = localStorageUtil.getItem('acessToken');
+            const response = await ticketsService.delete(ticketID)
 
-            if (!accessToken) {
-                toast.error('Sessão expirada. Por favor, faça login novamente.');
-                localStorageUtil.clear();
-                setIsLoading(false);
-                setIsOpen(false);
-                router.push('/');
-                return;
-            }
-
-            const response = await fetch(`/api/tickets/${ticketID}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const returnedResponse = await response.json();
-
-            if (returnedResponse.status === 400) {
-                toast.error('ID inválido');
-                setIsLoading(false);
-                setIsOpen(false);
-                return;
-            }
-
-            if (returnedResponse.status === 401) {
-                toast.error('Token inválido, faça login novamente.');
-                localStorageUtil.clear();
-                setIsLoading(false);
-                setIsOpen(false);
-                router.push('/');
-                return;
-            }
-
-            if (returnedResponse.status === 404) {
-                toast.error('Ingresso não encontrado');
-                setIsLoading(false);
-                setIsOpen(false);
-                return;
-            }
-
-            if (returnedResponse.status === 500) {
-                toast.error('Erro ao deletar ingresso, tente novamente mais tarde');
-                setIsLoading(false);
-                setIsOpen(false);
-                return;
-            }
-
-            if (returnedResponse.status === 200) {
-                toast.success('Ingresso excluído com sucesso !!!');
+            if (response.status === 200) {
+                toast.success('Reserva excluída com sucesso!!!');
                 setIsLoading(false);
                 setIsOpen(false);
                 if (onUpdatePage) onUpdatePage()
+            } else {
+                toast.error('Erro ao excluir reserva, tente novamente mais tarde!');
+                setIsLoading(false);
+                setIsOpen(false);
             }
         } catch (error) {
-            console.error('Erro ao deletar ingresso:', error);
-            toast.error('Erro ao deletar ingresso, tente novamente mais tarde')
+            console.log('Erro ao excluir reserva:', error);
+
+            if (isAxiosError(error) && error.response) {
+                const { status } = error.response;
+
+                switch (status) {
+                    case 400:
+                        toast.error('Erro: ID da reserva inválido!');
+                        break;
+                    case 401:
+                        toast.error('Sessão expirada. Por favor, faça login novamente!');
+                        localStorageUtil.removeItem('accessToken');
+                        setIsLoading(false)
+                        setIsOpen(false)
+                        router.push('/');
+                        break;
+                    case 404:
+                        toast.error('Reserva não encontrada!');
+                        break;
+                    case 500:
+                        toast.error('Erro interno no servidor ao excluir reserva, tente novamente mais tarde!');
+                        break;
+                    default:
+                        toast.error('Erro ao excluir reserva, tente novamente mais tarde!');
+                        break;                
+                }
+            } else {
+                toast.error('Erro ao excluir reserva, tente novamente mais tarde!');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -102,12 +87,13 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                     variant="ghost"
                     size="sm"
                     className="hover:bg-red-50 hover:text-red-600 hover:cursor-pointer w-9 h-9 p-0 text-red-500"
+                    disabled={shouldDisable}
                 >
                     <Trash size={18} />
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-[425px] text-black">
+            <DialogContent className="sm:max-w-106.25 text-black">
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="text-red-500" size={24} />
@@ -116,7 +102,7 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage }: Props) {
                         </DialogTitle>
                     </div>
                     <DialogDescription className="pt-2">
-                        Tem certeza que deseja excluir este ingresso?
+                        Tem certeza que deseja excluir esta reserva?
                         <br />
                         <strong>Esta ação não poderá ser desfeita.</strong>
                     </DialogDescription>

@@ -5,9 +5,9 @@ export async function POST(request: NextRequest) {
     try {
         const aValidTokenWasSent = await validateAuth(request)
 
-        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido', status: 401 })
+        if (aValidTokenWasSent.status === 401) return NextResponse.json({ error: 'Token inválido!' }, { status: 401 })
 
-        const response = NextResponse.json({ success: true, status: 200 });
+        const response = NextResponse.json({ success: true }, { status: 200 });
 
         response.cookies.set({
             name: 'accessToken',
@@ -22,6 +22,6 @@ export async function POST(request: NextRequest) {
         return response;
     } catch (error) {
         console.log('Erro ao deslogar admin: ', error);
-        return NextResponse.json({ error: 'Erro ao deslogar admin', status: 500 });
+        return NextResponse.json({ error: 'Erro ao deslogar admin!' }, { status: 500 });
     }
 }

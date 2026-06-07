@@ -11,13 +11,14 @@ type Props = {
   videoSrc?: string; 
 };
 
-const LOCAL_KEY = 'watched_reservation_video_v1';
+// const LOCAL_KEY = 'watched_reservation_video_v1';
 
 export default function ReserveButtonGuard({ filmId, className, children, videoSrc }: Props) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
 
-  const watched = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_KEY) === 'true' : false;
+  // const watched = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_KEY) === 'true' : false;
+  const watched = false;
  
 
   const goToSeatPicker = () => {
@@ -46,7 +47,7 @@ export default function ReserveButtonGuard({ filmId, className, children, videoS
         onClose={() => setOpenModal(false)}
         videoSrc={videoSrc || 'https://www.youtube.com/watch?v=a3ICNMQW7Ok'}
         onComplete={() => {
-          try { localStorage.setItem(LOCAL_KEY, 'true'); } catch (err) {}
+          // try { localStorage.setItem(LOCAL_KEY, 'true'); } catch (err) {}
           setOpenModal(false);
           goToSeatPicker();
         }}
