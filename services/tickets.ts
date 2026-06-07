@@ -11,6 +11,7 @@ import {
 import axios from "axios";
 
 const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente!"
+const RESOURCE = process.env.NEXT_PUBLIC_APP_URL
 
 const getAuthHeaders = () => {
     const cookie = localStorageUtil.getItem('accessToken')
@@ -26,7 +27,7 @@ const getAuthHeaders = () => {
 export const ticketsService = {
     getAll: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.get<GetTicketsSuccessResponse>('/api/tickets/getAllTickets', {
+        const response = await axios.get<GetTicketsSuccessResponse>(`${RESOURCE}/api/tickets/getAllTickets`, {
             headers: {
                 ...authorizationHeader
             },
@@ -36,7 +37,7 @@ export const ticketsService = {
     },
     update: async (id: string, dataToBeSent: Ticket) => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.put<PutTicketSuccessResponse>(`/api/tickets/${id}`, dataToBeSent, {
+        const response = await axios.put<PutTicketSuccessResponse>(`${RESOURCE}/api/tickets/${id}`, dataToBeSent, {
             headers: {
                 ...authorizationHeader
             },
@@ -46,7 +47,7 @@ export const ticketsService = {
     },
     delete: async (id: string) => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.delete(`/api/tickets/${id}`, {
+        const response = await axios.delete(`${RESOURCE}/api/tickets/${id}`, {
             headers: {
                 ...authorizationHeader
             },
@@ -55,16 +56,16 @@ export const ticketsService = {
         return response
     },
     getAllSeats: async () => {
-        const response = await axios.get<GetAllTicketsSuccessResponse>('/api/tickets/getAllSeats')
+        const response = await axios.get<GetAllTicketsSuccessResponse>(`${RESOURCE}/api/tickets/getAllSeats`)
         return response
     },
     create: async (dataToBeSent: TicketDataToBeSent) => {
-        const response = await axios.post<PostTicketSuccessResponse>('/api/tickets/register', dataToBeSent)
+        const response = await axios.post<PostTicketSuccessResponse>(`${RESOURCE}/api/tickets/register`, dataToBeSent)
         return response
     },
     deleteAll: async () => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.delete<DeleteAllTicketsSuccessResponse>('/api/tickets/deleteAll', {
+        const response = await axios.delete<DeleteAllTicketsSuccessResponse>(`${RESOURCE}/api/tickets/deleteAll`, {
             headers: {
                 'Content-Type': 'application/json',
                 ...authorizationHeader

@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
+const RESOURCE = process.env.NEXT_PUBLIC_APP_URL
 
 const getAuthHeaders = () => {
     const cookie = localStorageUtil.getItem('accessToken')
@@ -24,7 +25,7 @@ const getAuthHeaders = () => {
 export const movieService = {
     create: async (data: MovieFormData) => {
         const authorizationHeader = getAuthHeaders()
-        const response = await axios.post<PostMoviesSuccessResponse>('/api/movies', data, {
+        const response = await axios.post<PostMoviesSuccessResponse>(`${RESOURCE}/api/movies`, data, {
             headers: {
                 'Content-Type': 'application/json' ,
                 ...authorizationHeader
@@ -35,7 +36,7 @@ export const movieService = {
     },
 
     get: async () => {
-        const response = await axios.get<GetMoviesSuccessResponse>('/api/movies')
+        const response = await axios.get<GetMoviesSuccessResponse>(`${RESOURCE}/api/movies`)
         return response
     },
 
@@ -54,7 +55,7 @@ export const movieService = {
             updatedAt: updated_at
         }
 
-        const response = await axios.put<PutMoviesSuccessResponse>(`/api/movies/${id}`, payload, {
+        const response = await axios.put<PutMoviesSuccessResponse>(`${RESOURCE}/api/movies/${id}`, payload, {
             headers: {
                 'Content-Type': 'application/json',
                 ...authorizationHeader

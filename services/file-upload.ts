@@ -2,6 +2,7 @@ import { localStorageUtil } from "@/lib/localStorage_";
 import axios from "axios";
 
 export const NOT_FOUND_SESSION_ERROR_MESSAGE = "Sessão não encontrada. Faça login novamente."
+const RESOURCE = process.env.NEXT_PUBLIC_APP_URL
 
 const getAuthHeaders = () => {
     const cookie = localStorageUtil.getItem('accessToken')
@@ -15,7 +16,7 @@ const getAuthHeaders = () => {
 export const fileUploadService = {
   uploadImage: async (file: File): Promise<string> => {
     const authorizationHeader = getAuthHeaders()
-    const sig = await axios.post("/api/fileUpload", {}, { 
+    const sig = await axios.post(`${RESOURCE}/api/fileUpload`, {}, { 
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authorizationHeader}`
@@ -44,8 +45,7 @@ export const fileUploadService = {
   },
   deleteImage: async (imageUrl: string) => {
     const authorizationHeader = getAuthHeaders()
-
-    const response = await axios.delete("/api/fileUpload", {
+    const response = await axios.delete(`${RESOURCE}/api/fileUpload`, {
       data: { imageUrl },
       headers: {
         'Content-Type': 'application/json',
