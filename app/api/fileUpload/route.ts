@@ -67,8 +67,8 @@ export async function DELETE(request: NextRequest) {
         await cloudinary.uploader.destroy(publicId);
 
         return NextResponse.json({ status: 204 });
-    } catch (err) {
-        console.log("Erro ao deletar imagem: ", err);
+    } catch (error) {
+        console.log("Erro ao deletar imagem: ", error);
         return NextResponse.json(
             { error: "Erro ao interno no servidor ao realizar DELETE de imagem" },
             { status: 500 }

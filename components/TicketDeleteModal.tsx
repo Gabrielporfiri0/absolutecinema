@@ -46,8 +46,6 @@ export default function TicketDeleteModal({ ticketID, onUpdatePage, shouldDisabl
                 setIsOpen(false);
             }
         } catch (error) {
-            console.log('Erro ao excluir reserva:', error);
-
             if (isAxiosError(error) && error.response) {
                 const { status } = error.response;
 

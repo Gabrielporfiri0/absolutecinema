@@ -17,6 +17,7 @@ function formatDateBR(date: string) {
 
 export default function HomePage() {
   const [movieData, setMovieData] = useState<Movies>();
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     async function fetchMovieData() {
@@ -25,18 +26,32 @@ export default function HomePage() {
 
         if (response.status === 200 && response.data.movies__.length > 0) {
           const movie = response.data.movies__[0];
-
-          setMovieData(movie);
+          setMovieData(movie);        
+        } else if (response.status === 200 && response.data.movies__.length === 0) {
+          setMovieData(undefined);
+        } else {
+          setHasError(true);
         }
-
-        console.log('Erro ao buscar dados do filme em cartaz, resposta da API: ', response);
       } catch (error) {
-        console.log("Erro desconhecido ao buscar dados do filme em cartaz: ", error);
+        setHasError(true);
       }
     }
 
     fetchMovieData();
   }, []);
+
+  if (hasError) {
+    return (
+      <section className="text-center my-10">
+        <h1 className="text-4xl font-bold mb-4 text-white">
+          Erro ao buscar dados do filme em cartaz!
+        </h1>
+        <p className="text-xl text-gray-400">
+          Tente novamente mais tarde.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">

@@ -83,8 +83,6 @@ export default function TicketUpdateModal({ ticketDataToBePossibleUpdated, onUpd
                 toast.error('Erro ao atualizar reserva, tente novamente mais tarde!');
             }
         } catch (error) {
-            console.log('Erro ao atualizar reserva:', error);
-
             if (isAxiosError(error) && error.response) {
                 if (error.response.status === 401) {
                     toast.error('Sessão expirada. Por favor, faça login novamente!');

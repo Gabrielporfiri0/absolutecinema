@@ -50,8 +50,6 @@ export default function Page() {
                 toast.error('Erro ao realizar login, tente novamente mais tarde!')
             }
         } catch (error) {
-            console.log('Erro ao tentar logar admin: ', error)
-
             if (isAxiosError(error) && error.response) {
                 if (error.response.data && error.response.data.error) {
                     toast.error(error.response.data.error)
