@@ -27,6 +27,7 @@ export default function Navbar() {
           <Link href="/" className="hover:text-red-500 transition-colors">
             Início
           </Link>
+          
           <Link href="/#filmes" className="hover:text-red-500 transition-colors">
             Filmes
           </Link>
@@ -60,19 +61,13 @@ export default function Navbar() {
             >
               Início
             </Link>
+
             <Link
               href="/#filmes"
               className="block hover:text-red-500 pl-2"
               onClick={() => setIsOpen(false)}
             >
               Filmes
-            </Link>
-            <Link
-              href="/fale-conosco"
-              className="block hover:text-red-500 pl-2"
-              onClick={() => setIsOpen(false)}
-            >
-              Fale Conosco
             </Link>
           </div>
         </div>

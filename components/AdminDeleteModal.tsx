@@ -46,8 +46,6 @@ export default function AdminDeleteModal({ adminID, onUpdatePage, shouldDisable 
                 setIsOpen(false);
             }
         } catch (error) {
-            console.log('Erro ao excluir admin:', error);
-
             if (isAxiosError(error) && error.response) {
                 switch (error.response.status) {
                     case 400:

@@ -79,8 +79,6 @@ export default function Page() {
                 toast.error('Erro ao buscar dados das reservas feitas!!!');
             }
         } catch (error) {
-            console.log('Erro ao buscar dados das reservas feitas: ', error)
-
             if (isAxiosError(error) && error.response) {
                 switch (error.response.status) {
                     case 401:
@@ -111,8 +109,6 @@ export default function Page() {
                 toast.error('Erro ao buscar dados dos admins cadastrados!!!');
             }
         } catch (error) {
-            console.log('Erro ao buscar dados dos admins cadastrados: ', error)
-
             if (isAxiosError(error) && error.response) {
                 switch (error.response.status) {
                     case 401:
@@ -165,8 +161,6 @@ export default function Page() {
                 return
             }
         } catch (error) {
-            console.log('Erro ao deslogar admin: ', error)
-
             if (isAxiosError(error) && error.response) {
                 switch (error.response.status) {
                     case 401:
@@ -210,8 +204,6 @@ export default function Page() {
                 toast.error('Erro ao cadastrar novo admin, tente novamente mais tarde!')
             }
         } catch(error) {
-            console.log('Erro ao cadastrar novo admin: ', error)
-
             if (isAxiosError(error) && error.response) {
                 if (error.response.status === 401) {
                     toast.error('Sessão expirada, faça login novamente!');
@@ -241,8 +233,6 @@ export default function Page() {
                 toast.error('Erro ao excluir todas as reservas, tente novamente mais tarde!');
             }
         } catch (error) {
-            console.log('Erro ao excluir todas as reservas: ', error)
-
             if (isAxiosError(error) && error.response) {
                 if (error.response.status === 401) {
                     toast.error('Sessão expirada, faça login novamente!');

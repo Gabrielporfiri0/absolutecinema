@@ -49,6 +49,7 @@ const seatsMap = generateMapSeats();
 export default function SeatPicker() {
   const [seatSelected, setSeatSelected] = useState<number>();
   const [seatsReserved, setSeatsReserved] = useState<number[]>([]);
+  const [hasErrorInGettingSeatsReserved, setHasErrorInGettingSeatsReserved] = useState(false);
 
   const {
     register,
@@ -77,10 +78,10 @@ export default function SeatPicker() {
       if (response.status === 200) {
         setSeatsReserved(response.data.seats__);
       } else {
-        console.log('Erro ao buscar dados dos assentos! Erro: ', response);
+        setHasErrorInGettingSeatsReserved(true);
       }
     } catch (error) {
-      console.log('Erro ao buscar dados de todos os assentos registrados: ', error);
+      setHasErrorInGettingSeatsReserved(true);
     }
   };
 
@@ -144,8 +145,6 @@ export default function SeatPicker() {
         toast.error(`Erro ao reservar assento ${seatSelected}, tente novamente mais tarde!`);
       }
     } catch (error) {
-      console.log('Erro ao enviar reserva:', error);
-
       if (isAxiosError(error) && error.response) {
         if (error.response.data && error.response.data.error) {
           toast.error(`Não foi possível reservar o assento ${seatSelected}: ${error.response.data.error}`);
@@ -158,6 +157,19 @@ export default function SeatPicker() {
         toast.error('Erro ao realizar reserva, tente novamente mais tarde!');
       }
     }
+  }
+
+  if (hasErrorInGettingSeatsReserved) {
+    return (
+      <section className="text-center my-10">
+        <h1 className="text-4xl font-bold mb-4 text-white">
+          Erro ao buscar dados dos assentos reservados!
+        </h1>
+        <p className="text-xl text-gray-400">
+          Tente novamente mais tarde.
+        </p>
+      </section>
+    );
   }
 
   return (
