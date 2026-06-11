@@ -45,7 +45,7 @@ export const AdminSchema = z.object({
         .min(3, { message: 'Ao menos 3 caracteres' })
         .max(20, { message: 'No máximo 20 caracteres' })
         .transform(value => value.trim())
-        .refine(value => value.length > 0, { message: 'O nome não pode ser vazio após remover espaços em branco' }),
+        .refine(value => value.length > 0, { message: 'O usuário não pode ser vazio após remover espaços em branco' }),
     password: z.string()
         .min(6, { message: 'Ao menos 6 caracteres' })
         .max(20, { message: 'No máximo 20 caracteres' })
